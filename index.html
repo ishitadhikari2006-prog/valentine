@@ -1,140 +1,189 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nandini 💖 Will You Be My Valentine?</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif}
-    body{
-      min-height:100vh;
-      background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);
-      color:white;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      overflow:hidden;
-    }
-    .screen{display:none;flex-direction:column;align-items:center;text-align:center;padding:20px}
-    .active{display:flex}
-    h1{font-size:2.2rem;margin-bottom:20px}
-    p{opacity:.85}
-    button{
-      padding:14px 28px;
-      font-size:1.1rem;
-      border:none;
-      border-radius:30px;
-      margin:12px;
-      cursor:pointer;
-      transition:all .3s ease;
-    }
-    .yes{background:#ff4ecd;color:white}
-    .no{background:#444;color:white}
-    button:hover{transform:scale(1.05)}/* Valentine screen */
-#valentine h1 span{color:#ff4ecd}
-
-/* Game */
-canvas{background:#0b0b1a;border-radius:20px;box-shadow:0 0 40px rgba(255,78,205,.4)}
-
-/* Gojo overlay */
-.gojo{
-  position:absolute;
-  inset:0;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-size:3rem;
-  font-weight:800;
-  color:#7df9ff;
-  text-shadow:0 0 25px #7df9ff,0 0 60px #5aa9ff;
-  animation:fadeIn .8s ease forwards;
+<meta charset="UTF-8">
+<title>RUN LITTLE MOUSE RUN 🐭</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+html,body{
+  margin:0;
+  padding:0;
+  background:#020617;
+  overflow:hidden;
+  font-family: 'Segoe UI', sans-serif;
+  color:white;
 }
-@keyframes fadeIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
-
-/* Final */
-.balloons{font-size:3rem;animation:float 2s infinite alternate}
-@keyframes float{from{transform:translateY(0)}to{transform:translateY(-20px)}}
-
-  </style>
+#title{
+  position:absolute;
+  top:12px;
+  width:100%;
+  text-align:center;
+  font-size:22px;
+  letter-spacing:2px;
+}
+#counter{
+  position:absolute;
+  top:45px;
+  width:100%;
+  text-align:center;
+  font-size:14px;
+  opacity:.8;
+}
+canvas{
+  display:block;
+}
+#overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.85);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  text-align:center;
+  padding:20px;
+}
+#overlay h1{
+  font-size:22px;
+  margin-bottom:15px;
+}
+button{
+  padding:14px 26px;
+  margin:8px;
+  font-size:16px;
+  border:none;
+  border-radius:30px;
+  cursor:pointer;
+}
+.yes{background:#ff5fa2;color:black;}
+.no{background:#444;color:white;}
+</style>
 </head>
-<body><!-- SCREEN 1 --><div id="valentine" class="screen active">
-  <h1>Nandini 💖<br><span>Will you be my Valentine?</span></h1>
-  <p>Choose wisely 😼</p>
-  <div>
-    <button id="yesBtn" class="yes">YES 💘</button>
-    <button id="noBtn" class="no">NO 😏</button>
-  </div>
-</div><!-- SCREEN 2 GAME --><div id="game" class="screen">
-  <h1>RUN LITTLE MOUSE RUN 🐭</h1>
-  <p>Jump over 14 obstacles to escape…</p>
-  <canvas id="canvas" width="320" height="420"></canvas>
-</div><!-- SCREEN 3 FINAL --><div id="final" class="screen">
-  <div class="balloons">🎈🎉💖🎊</div>
-  <h1>You are officially appointed as<br><span>Mr. Ishit’s Valentine 😼</span></h1>
-  <p>Best decision ever.</p>
-</div><script>
-  const screens={
-    valentine:document.getElementById('valentine'),
-    game:document.getElementById('game'),
-    final:document.getElementById('final')
+<body>
+
+<div id="title">RUN LITTLE MOUSE RUN 🐭</div>
+<div id="counter">Obstacles cleared: 0 / 14</div>
+<canvas id="game"></canvas>
+
+<div id="overlay">
+  <h1 id="endText"></h1>
+  <button class="yes" onclick="accept()">YES 💖</button>
+  <button class="no" onclick="restart()">Restart Game 😈</button>
+</div>
+
+<script>
+const c = document.getElementById("game");
+const ctx = c.getContext("2d");
+c.width = innerWidth;
+c.height = innerHeight;
+
+let ground = c.height - 120;
+let mouse = { x:100, y:ground-40, vy:0, size:40 };
+let obs = [];
+let gravity = 1.2;
+let jumpPower = -18;
+let speed = 6;
+let score = 0;
+let dead = false;
+
+function spawn(){
+  obs.push({ x:c.width+40, w:40, h:40 });
+}
+
+addEventListener("touchstart",()=> {
+  if(mouse.y >= ground-40) mouse.vy = jumpPower;
+});
+addEventListener("keydown",e=>{
+  if(e.code==="Space" && mouse.y >= ground-40) mouse.vy = jumpPower;
+});
+
+function draw(){
+  ctx.clearRect(0,0,c.width,c.height);
+
+  // road
+  ctx.fillStyle="#444";
+  ctx.fillRect(0,ground,c.width,4);
+
+  // mouse
+  ctx.font="40px serif";
+  ctx.fillText("🐭", mouse.x, mouse.y+40);
+
+  // obstacles
+  ctx.fillStyle="#ff0055";
+  obs.forEach(o=>{
+    ctx.fillRect(o.x, ground-o.h, o.w, o.h);
+  });
+}
+
+function update(){
+  mouse.vy += gravity;
+  mouse.y += mouse.vy;
+  if(mouse.y > ground-40) mouse.y = ground-40;
+
+  obs.forEach(o=>o.x -= speed);
+
+  if(obs.length && obs[0].x < -50){
+    obs.shift();
+    score++;
+    speed += 0.4;
+    document.getElementById("counter").innerText =
+      `Obstacles cleared: ${score} / 14`;
   }
 
-  function show(name){Object.values(screens).forEach(s=>s.classList.remove('active'));screens[name].classList.add('active')}
+  obs.forEach(o=>{
+    if(
+      mouse.x+30 > o.x &&
+      mouse.x < o.x+o.w &&
+      mouse.y+40 > ground-o.h
+    ){
+      kill();
+    }
+  });
 
-  // Buttons grow/shrink
-  let scale=1
-  document.getElementById('noBtn').onclick=()=>{
-    scale+=.2
-    document.getElementById('yesBtn').style.transform=`scale(${scale})`
-    document.getElementById('noBtn').style.transform=`scale(${Math.max(.4,1-scale/3)})`
-    if(scale>3) show('game')
+  if(score === 14 && !dead){
+    gojo();
   }
+}
 
-  document.getElementById('yesBtn').onclick=()=>show('final')
-
-  // GAME LOGIC
-  const canvas=document.getElementById('canvas')
-  const ctx=canvas.getContext('2d')
-  let mouseY=350,vel=0,gravity=1,obstacles=[],passed=0,frame=0
-
-  document.body.onclick=()=>{vel=-14}
-
-  function loop(){
-    ctx.clearRect(0,0,canvas.width,canvas.height)
-
-    // Mouse
-    vel+=gravity;mouseY+=vel
-    if(mouseY>350){mouseY=350;vel=0}
-    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(60,mouseY,15,0,Math.PI*2);ctx.fill()
-
-    // Obstacles
-    if(frame%80===0) obstacles.push({x:canvas.width,y:360,h:40})
-    obstacles.forEach(o=>{
-      o.x-=4
-      ctx.fillStyle='#ff4ecd';ctx.fillRect(o.x,o.y-o.h,20,o.h)
-      if(o.x===60) passed++
-      if(o.x<80&&o.x>40&&mouseY>320){restart()}
-    })
-    obstacles=obstacles.filter(o=>o.x>-20)
-
-    // Score
-    ctx.fillStyle='white';ctx.fillText(`Obstacles: ${passed}/14`,10,20)
-
-    if(passed>=14){gojoAttack();return}
-
-    frame++;requestAnimationFrame(loop)
+function loop(){
+  if(!dead){
+    draw();
+    update();
+    requestAnimationFrame(loop);
   }
+}
 
-  function restart(){passed=0;obstacles=[];mouseY=350;vel=0}
+function kill(){
+  dead = true;
+  ctx.fillStyle="rgba(160,0,255,.6)";
+  ctx.fillRect(0,0,c.width,c.height);
+  setTimeout(gojo,600);
+}
 
-  function gojoAttack(){
-    const g=document.createElement('div')
-    g.className='gojo'
-    g.innerText='HOLLOW PURPLE'
-    document.body.appendChild(g)
-    setTimeout(()=>{document.body.removeChild(g);restart();show('valentine')},2000)
-  }
+function gojo(){
+  dead = true;
+  document.getElementById("overlay").style.display="flex";
+  document.getElementById("endText").innerHTML =
+   `💥 SATORU GOJO APPEARS 💥<br><br>
+    Hollow Purple obliterates the mouse.<br><br>
+    So Nandini…<br>
+    Do you accept that your boyfriend is always right<br>
+    and will you be his Valentine? 😼`;
+}
 
-  show('valentine');loop()
-</script></body>
+function accept(){
+  document.getElementById("endText").innerHTML =
+   `🎉🎈 CONGRATULATIONS NANDINI 🎈🎉<br><br>
+    You are officially appointed as<br>
+    <b>Mr. Ishit’s Valentine</b> 💖😼`;
+}
+
+function restart(){
+  location.reload();
+}
+
+setInterval(spawn,1600);
+loop();
+</script>
+</body>
 </html>
