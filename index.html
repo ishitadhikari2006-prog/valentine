@@ -1,0 +1,155 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Nandini 💘 Will You Be My Valentine?</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * { box-sizing: border-box; font-family: 'Comic Sans MS', cursive; }
+    body {
+      margin: 0; background: radial-gradient(circle at top, #0b1026, #000);
+      color: #fff; overflow: hidden; text-align: center;
+    }
+    h1 { margin-top: 12vh; font-size: 2.2rem; }
+    #buttons {
+      margin-top: 40px; position: relative; height: 200px;
+    }
+    button {
+      border: none; padding: 15px 30px; border-radius: 40px;
+      font-size: 1.3rem; cursor: pointer; transition: all 0.3s ease;
+    }
+    #yesBtn { background: #ff4da6; color: #fff; position: absolute; left: 20%; }
+    #noBtn { background: #555; color: #fff; position: absolute; right: 20%; }canvas { display: none; background: linear-gradient(#020617, #000); }
+
+#gameText {
+  position: absolute; top: 10px; width: 100%; font-size: 1.4rem;
+}
+
+.balloons {
+  position: fixed; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 20px,
+    rgba(255,255,255,0.05) 21px
+  );
+  animation: float 4s linear infinite;
+}
+
+@keyframes float {
+  from { background-position-y: 100vh; }
+  to { background-position-y: -100vh; }
+}
+
+  </style>
+</head>
+<body><h1 id="question">Nandini 😚<br>Will you be my Valentine, my beautiful baby girl?</h1><div id="buttons">
+  <button id="yesBtn">YES 💖</button>
+  <button id="noBtn">NO 😤</button>
+</div><div id="gameText"></div>
+<canvas id="game" width="360" height="640"></canvas><script>
+  const yesBtn = document.getElementById('yesBtn');
+  const noBtn = document.getElementById('noBtn');
+  const question = document.getElementById('question');
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const gameText = document.getElementById('gameText');
+
+  let yesScale = 1;
+  let noScale = 1;
+  let noClicks = 0;
+
+  noBtn.onclick = () => {
+    navigator.vibrate?.(80);
+    noClicks++;
+    yesScale += 0.3;
+    noScale = Math.max(0.3, noScale - 0.15);
+    yesBtn.style.transform = `scale(${yesScale})`;
+    noBtn.style.transform = `scale(${noScale})`;
+
+    if (noClicks >= 5) startGame();
+  };
+
+  yesBtn.onclick = () => celebrate();
+
+  function startGame() {
+    question.style.display = 'none';
+    document.getElementById('buttons').style.display = 'none';
+    canvas.style.display = 'block';
+    gameText.textContent = 'RUN LITTLE MOUSE RUN 🐭';
+    runGame();
+  }
+
+  let mouse = { x: 50, y: 520, vy: 0, onGround: true };
+  let obstacles = [];
+  let frame = 0;
+  let passed = 0;
+
+  function drawMouse() {
+    ctx.fillStyle = '#cfcfcf';
+    ctx.beginPath(); ctx.arc(mouse.x, mouse.y, 15, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'pink'; ctx.beginPath(); ctx.arc(mouse.x+8, mouse.y-8, 4, 0, Math.PI*2); ctx.fill();
+  }
+
+  function drawGojoAttack() {
+    let r = 0;
+    const blast = setInterval(() => {
+      ctx.fillStyle = 'rgba(170,0,255,0.2)';
+      ctx.beginPath(); ctx.arc(canvas.width/2, canvas.height/2, r, 0, Math.PI*2); ctx.fill();
+      r += 25;
+      if (r > 400) { clearInterval(blast); resetGame(); }
+    }, 30);
+  }
+
+  function resetGame() {
+    canvas.style.display = 'none';
+    question.style.display = 'block';
+    document.getElementById('buttons').style.display = 'block';
+    question.innerHTML = 'So… do you agree that your boyfriend is always right in arguments? 😼<br>And will you be his Valentine?';
+    yesBtn.textContent = 'YES 💘';
+    noBtn.textContent = 'Restart Game 🎮';
+    noBtn.onclick = startGame;
+  }
+
+  function celebrate() {
+    document.body.innerHTML = `
+      <div class='balloons'></div>
+      <h1>🎉💖🎈</h1>
+      <h2>You are successfully appointed as</h2>
+      <h1>Mr. Ishit’s BEST Valentine 😼💘</h1>
+    `;
+  }
+
+  function runGame() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    frame++;
+
+    if (frame % 90 === 0) obstacles.push({ x: canvas.width, w: 30 });
+
+    obstacles.forEach(o => o.x -= 4 + passed * 0.2);
+    obstacles = obstacles.filter(o => o.x + o.w > 0);
+
+    if (mouse.onGround && Math.random() < 0.02) {
+      mouse.vy = -12; mouse.onGround = false;
+    }
+
+    mouse.vy += 0.7;
+    mouse.y += mouse.vy;
+    if (mouse.y >= 520) { mouse.y = 520; mouse.vy = 0; mouse.onGround = true; }
+
+    ctx.fillStyle = '#444'; ctx.fillRect(0, 550, canvas.width, 5);
+    drawMouse();
+
+    ctx.fillStyle = '#ff3333';
+    obstacles.forEach(o => ctx.fillRect(o.x, 520, o.w, 30));
+
+    obstacles.forEach(o => {
+      if (o.x + o.w < mouse.x && !o.passed) {
+        o.passed = true; passed++;
+        if (passed === 14) drawGojoAttack();
+      }
+    });
+
+    if (passed < 14) requestAnimationFrame(runGame);
+  }
+</script></body>
+</html>
