@@ -1,155 +1,140 @@
 <!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Nandini 💘 Will You Be My Valentine?</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nandini 💖 Will You Be My Valentine?</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; font-family: 'Comic Sans MS', cursive; }
-    body {
-      margin: 0; background: radial-gradient(circle at top, #0b1026, #000);
-      color: #fff; overflow: hidden; text-align: center;
+    *{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif}
+    body{
+      min-height:100vh;
+      background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);
+      color:white;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      overflow:hidden;
     }
-    h1 { margin-top: 12vh; font-size: 2.2rem; }
-    #buttons {
-      margin-top: 40px; position: relative; height: 200px;
+    .screen{display:none;flex-direction:column;align-items:center;text-align:center;padding:20px}
+    .active{display:flex}
+    h1{font-size:2.2rem;margin-bottom:20px}
+    p{opacity:.85}
+    button{
+      padding:14px 28px;
+      font-size:1.1rem;
+      border:none;
+      border-radius:30px;
+      margin:12px;
+      cursor:pointer;
+      transition:all .3s ease;
     }
-    button {
-      border: none; padding: 15px 30px; border-radius: 40px;
-      font-size: 1.3rem; cursor: pointer; transition: all 0.3s ease;
-    }
-    #yesBtn { background: #ff4da6; color: #fff; position: absolute; left: 20%; }
-    #noBtn { background: #555; color: #fff; position: absolute; right: 20%; }canvas { display: none; background: linear-gradient(#020617, #000); }
+    .yes{background:#ff4ecd;color:white}
+    .no{background:#444;color:white}
+    button:hover{transform:scale(1.05)}/* Valentine screen */
+#valentine h1 span{color:#ff4ecd}
 
-#gameText {
-  position: absolute; top: 10px; width: 100%; font-size: 1.4rem;
-}
+/* Game */
+canvas{background:#0b0b1a;border-radius:20px;box-shadow:0 0 40px rgba(255,78,205,.4)}
 
-.balloons {
-  position: fixed; inset: 0; pointer-events: none;
-  background: repeating-linear-gradient(
-    90deg,
-    transparent,
-    transparent 20px,
-    rgba(255,255,255,0.05) 21px
-  );
-  animation: float 4s linear infinite;
+/* Gojo overlay */
+.gojo{
+  position:absolute;
+  inset:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-size:3rem;
+  font-weight:800;
+  color:#7df9ff;
+  text-shadow:0 0 25px #7df9ff,0 0 60px #5aa9ff;
+  animation:fadeIn .8s ease forwards;
 }
+@keyframes fadeIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
 
-@keyframes float {
-  from { background-position-y: 100vh; }
-  to { background-position-y: -100vh; }
-}
+/* Final */
+.balloons{font-size:3rem;animation:float 2s infinite alternate}
+@keyframes float{from{transform:translateY(0)}to{transform:translateY(-20px)}}
 
   </style>
 </head>
-<body><h1 id="question">Nandini 😚<br>Will you be my Valentine, my beautiful baby girl?</h1><div id="buttons">
-  <button id="yesBtn">YES 💖</button>
-  <button id="noBtn">NO 😤</button>
-</div><div id="gameText"></div>
-<canvas id="game" width="360" height="640"></canvas><script>
-  const yesBtn = document.getElementById('yesBtn');
-  const noBtn = document.getElementById('noBtn');
-  const question = document.getElementById('question');
-  const canvas = document.getElementById('game');
-  const ctx = canvas.getContext('2d');
-  const gameText = document.getElementById('gameText');
-
-  let yesScale = 1;
-  let noScale = 1;
-  let noClicks = 0;
-
-  noBtn.onclick = () => {
-    navigator.vibrate?.(80);
-    noClicks++;
-    yesScale += 0.3;
-    noScale = Math.max(0.3, noScale - 0.15);
-    yesBtn.style.transform = `scale(${yesScale})`;
-    noBtn.style.transform = `scale(${noScale})`;
-
-    if (noClicks >= 5) startGame();
-  };
-
-  yesBtn.onclick = () => celebrate();
-
-  function startGame() {
-    question.style.display = 'none';
-    document.getElementById('buttons').style.display = 'none';
-    canvas.style.display = 'block';
-    gameText.textContent = 'RUN LITTLE MOUSE RUN 🐭';
-    runGame();
+<body><!-- SCREEN 1 --><div id="valentine" class="screen active">
+  <h1>Nandini 💖<br><span>Will you be my Valentine?</span></h1>
+  <p>Choose wisely 😼</p>
+  <div>
+    <button id="yesBtn" class="yes">YES 💘</button>
+    <button id="noBtn" class="no">NO 😏</button>
+  </div>
+</div><!-- SCREEN 2 GAME --><div id="game" class="screen">
+  <h1>RUN LITTLE MOUSE RUN 🐭</h1>
+  <p>Jump over 14 obstacles to escape…</p>
+  <canvas id="canvas" width="320" height="420"></canvas>
+</div><!-- SCREEN 3 FINAL --><div id="final" class="screen">
+  <div class="balloons">🎈🎉💖🎊</div>
+  <h1>You are officially appointed as<br><span>Mr. Ishit’s Valentine 😼</span></h1>
+  <p>Best decision ever.</p>
+</div><script>
+  const screens={
+    valentine:document.getElementById('valentine'),
+    game:document.getElementById('game'),
+    final:document.getElementById('final')
   }
 
-  let mouse = { x: 50, y: 520, vy: 0, onGround: true };
-  let obstacles = [];
-  let frame = 0;
-  let passed = 0;
+  function show(name){Object.values(screens).forEach(s=>s.classList.remove('active'));screens[name].classList.add('active')}
 
-  function drawMouse() {
-    ctx.fillStyle = '#cfcfcf';
-    ctx.beginPath(); ctx.arc(mouse.x, mouse.y, 15, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = 'pink'; ctx.beginPath(); ctx.arc(mouse.x+8, mouse.y-8, 4, 0, Math.PI*2); ctx.fill();
+  // Buttons grow/shrink
+  let scale=1
+  document.getElementById('noBtn').onclick=()=>{
+    scale+=.2
+    document.getElementById('yesBtn').style.transform=`scale(${scale})`
+    document.getElementById('noBtn').style.transform=`scale(${Math.max(.4,1-scale/3)})`
+    if(scale>3) show('game')
   }
 
-  function drawGojoAttack() {
-    let r = 0;
-    const blast = setInterval(() => {
-      ctx.fillStyle = 'rgba(170,0,255,0.2)';
-      ctx.beginPath(); ctx.arc(canvas.width/2, canvas.height/2, r, 0, Math.PI*2); ctx.fill();
-      r += 25;
-      if (r > 400) { clearInterval(blast); resetGame(); }
-    }, 30);
+  document.getElementById('yesBtn').onclick=()=>show('final')
+
+  // GAME LOGIC
+  const canvas=document.getElementById('canvas')
+  const ctx=canvas.getContext('2d')
+  let mouseY=350,vel=0,gravity=1,obstacles=[],passed=0,frame=0
+
+  document.body.onclick=()=>{vel=-14}
+
+  function loop(){
+    ctx.clearRect(0,0,canvas.width,canvas.height)
+
+    // Mouse
+    vel+=gravity;mouseY+=vel
+    if(mouseY>350){mouseY=350;vel=0}
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(60,mouseY,15,0,Math.PI*2);ctx.fill()
+
+    // Obstacles
+    if(frame%80===0) obstacles.push({x:canvas.width,y:360,h:40})
+    obstacles.forEach(o=>{
+      o.x-=4
+      ctx.fillStyle='#ff4ecd';ctx.fillRect(o.x,o.y-o.h,20,o.h)
+      if(o.x===60) passed++
+      if(o.x<80&&o.x>40&&mouseY>320){restart()}
+    })
+    obstacles=obstacles.filter(o=>o.x>-20)
+
+    // Score
+    ctx.fillStyle='white';ctx.fillText(`Obstacles: ${passed}/14`,10,20)
+
+    if(passed>=14){gojoAttack();return}
+
+    frame++;requestAnimationFrame(loop)
   }
 
-  function resetGame() {
-    canvas.style.display = 'none';
-    question.style.display = 'block';
-    document.getElementById('buttons').style.display = 'block';
-    question.innerHTML = 'So… do you agree that your boyfriend is always right in arguments? 😼<br>And will you be his Valentine?';
-    yesBtn.textContent = 'YES 💘';
-    noBtn.textContent = 'Restart Game 🎮';
-    noBtn.onclick = startGame;
+  function restart(){passed=0;obstacles=[];mouseY=350;vel=0}
+
+  function gojoAttack(){
+    const g=document.createElement('div')
+    g.className='gojo'
+    g.innerText='HOLLOW PURPLE'
+    document.body.appendChild(g)
+    setTimeout(()=>{document.body.removeChild(g);restart();show('valentine')},2000)
   }
 
-  function celebrate() {
-    document.body.innerHTML = `
-      <div class='balloons'></div>
-      <h1>🎉💖🎈</h1>
-      <h2>You are successfully appointed as</h2>
-      <h1>Mr. Ishit’s BEST Valentine 😼💘</h1>
-    `;
-  }
-
-  function runGame() {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    frame++;
-
-    if (frame % 90 === 0) obstacles.push({ x: canvas.width, w: 30 });
-
-    obstacles.forEach(o => o.x -= 4 + passed * 0.2);
-    obstacles = obstacles.filter(o => o.x + o.w > 0);
-
-    if (mouse.onGround && Math.random() < 0.02) {
-      mouse.vy = -12; mouse.onGround = false;
-    }
-
-    mouse.vy += 0.7;
-    mouse.y += mouse.vy;
-    if (mouse.y >= 520) { mouse.y = 520; mouse.vy = 0; mouse.onGround = true; }
-
-    ctx.fillStyle = '#444'; ctx.fillRect(0, 550, canvas.width, 5);
-    drawMouse();
-
-    ctx.fillStyle = '#ff3333';
-    obstacles.forEach(o => ctx.fillRect(o.x, 520, o.w, 30));
-
-    obstacles.forEach(o => {
-      if (o.x + o.w < mouse.x && !o.passed) {
-        o.passed = true; passed++;
-        if (passed === 14) drawGojoAttack();
-      }
-    });
-
-    if (passed < 14) requestAnimationFrame(runGame);
-  }
+  show('valentine');loop()
 </script></body>
 </html>
