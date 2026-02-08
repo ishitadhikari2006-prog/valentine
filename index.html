@@ -11,6 +11,8 @@ body{
   overflow:hidden;
 }
 .screen{
+  z-index:1;
+
   position:absolute;
   inset:0;
   display:flex;
@@ -85,18 +87,18 @@ button{
   filter:blur(6px);
 }
 </style></head>
-<body><div id="start" class="screen">
+<body><div id="start" class="screen" style="z-index:10">
   <h2>Do you accept your bf is always right in every argument and you wanna be his Valentine 😼❤️</h2>
   <div class="buttons">
     <button id="yesBtn">YES</button>
     <button id="noBtn">NO</button>
   </div>
-</div><div id="game" class="screen hidden">
+</div><div id="game" class="screen hidden" style="z-index:5">
   <div id="title">RUN LITTLE MOUSE RUN</div>
   <img id="jerry" src="jerry.png">
   <div id="ground"></div>
 </div><img id="gojo" src="gojo.png" class="hidden">
-<div id="purple" class="hidden"></div><div id="end" class="screen hidden"></div><script>
+<div id="purple" class="hidden"></div><div id="end" class="screen hidden" style="z-index:15"></div><script>
 const start=document.getElementById('start');
 const game=document.getElementById('game');
 const end=document.getElementById('end');
@@ -110,13 +112,15 @@ let obstacles=[];
 let passed=0;
 let playing=false;
 
-yesBtn.onclick=()=>{
+yesBtn.onclick=(e)=>{
+  e.stopPropagation();
   start.classList.add('hidden');
   end.classList.remove('hidden');
   end.innerHTML="<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
 };
 
-noBtn.onclick=()=>{
+noBtn.onclick=(e)=>{
+  e.stopPropagation();
   noCount++;
   noBtn.style.transform=`scale(${Math.max(0.2,1-noCount*0.06)})`;
   yesBtn.style.transform=`scale(${1+noCount*0.08})`;
