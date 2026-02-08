@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Valentine Game</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
@@ -11,7 +11,7 @@
     background: #ffffff;
     color: #000000;
     overflow: hidden;
-    touch-action: manipulation; /* Improves mobile touch response */
+    touch-action: manipulation;
   }
   .screen {
     z-index: 1;
@@ -23,7 +23,7 @@
     align-items: center;
     text-align: center;
     padding: 20px;
-    background: white; /* Ensure background covers elements behind */
+    background: white;
   }
   .hidden { display: none !important; }
   button {
@@ -53,7 +53,6 @@
     bottom: 80px;
     left: 40px;
     width: 60px;
-    /* Added height just in case image fails to load so you see the box */
     height: 60px; 
     object-fit: contain;
   }
@@ -80,11 +79,11 @@
   }
   #gojo {
     position: absolute;
-    right: -200px;
+    right: -200px; /* Hidden offscreen initially */
     bottom: 130px;
     width: 140px;
     opacity: 0;
-    transition: right 1.2s ease, opacity 0.5s ease; /* Smooth slide */
+    transition: right 1.2s ease, opacity 0.5s ease;
     z-index: 6;
   }
   #purple {
@@ -97,13 +96,13 @@
     z-index: 7;
   }
   
-  /* Added YOU DIED styles */
+  /* --- CRITICAL ADDITION: Styles for the Death Screen --- */
   #deathScreen {
     position: absolute;
     inset: 0;
     background: black;
     color: red;
-    z-index: 20;
+    z-index: 999; /* Must be on top of everything */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -146,7 +145,7 @@ const noBtn = document.getElementById('noBtn');
 const jerry = document.getElementById('jerry');
 const gojo = document.getElementById('gojo');
 const purple = document.getElementById('purple');
-const deathScreen = document.getElementById('deathScreen');
+const deathScreen = document.getElementById('deathScreen'); // Fix: Get the death screen
 
 let noCount = 0;
 let y = 0, vy = 0;
@@ -155,7 +154,7 @@ let passed = 0;
 let playing = false;
 let gameInterval;
 let loopId;
-let blastInterval; // Added to manage purple ball loop
+let blastInterval;
 
 // Yes Button Logic
 yesBtn.onclick = (e) => {
@@ -189,159 +188,5 @@ function spawnObstacle(){
   o.className = 'obstacle';
   o.style.left = '100%';
   gameScreen.appendChild(o);
-  obstacles.push(o);
-}
-
-function loop(){
-  if(!playing) return;
-  
-  // Gravity logic
-  vy -= 0.6;
-  y += vy;
-  if(y < 0) { y = 0; vy = 0; }
-  jerry.style.bottom = (80 + y) + 'px';
-
-  obstacles.forEach((o, i) => {
-    o.style.left = (o.offsetLeft - 5) + 'px';
-    
-    // Collision Detection (Wall)
-    if(o.offsetLeft < 90 && o.offsetLeft > 40 && y < 50){
-      triggerDeath(); // Changed from lose() to triggerDeath()
-    }
-    
-    // Remove obstacle if off screen
-    if(o.offsetLeft < -30){
-      o.remove();
-      obstacles.splice(i, 1);
-      passed++;
-      if(passed === 14) finish();
-    }
-  });
-  
-  loopId = requestAnimationFrame(loop);
-}
-
-// Jump Logic (Mobile Tap or Click)
-gameScreen.onclick = () => { 
-  if(playing && y === 0) vy = 14; 
-};
-
-function finish(){
-  playing = false;
-  clearInterval(gameInterval);
-  cancelAnimationFrame(loopId);
-
-  const f = document.createElement('div');
-  f.id = 'finish';
-  gameScreen.appendChild(f);
-  
-  const t = document.createElement('div');
-  t.id = 'finishText';
-  t.innerText = "No I don't";
-  gameScreen.appendChild(t);
-  
-  // Wait a moment then start Gojo sequence
-  setTimeout(gojoAttack, 500);
-}
-
-function gojoAttack(){
-  gojo.classList.remove('hidden');
-  
-  // 1. SLIDE IN
-  setTimeout(() => {
-    gojo.style.opacity = '1';
-    gojo.style.right = '20px';
-  }, 50);
-
-  // 2. WAIT, THEN THROW HOLLOW PURPLE
-  setTimeout(() => {
-      purple.classList.remove('hidden');
-      let x = window.innerWidth - 200;
-      purple.style.bottom = '150px';
-      purple.style.left = x + 'px'; // Reset position
-
-      blastInterval = setInterval(() => {
-        x -= 15;
-        purple.style.left = x + 'px';
-        
-        if(x < 80){ // Impact with Jerry position
-          clearInterval(blastInterval);
-          triggerDeath(); // Changed from lose() to triggerDeath()
-        }
-      }, 16);
-  }, 1500); // 1.5 second delay between slide and attack
-}
-
-// New function to handle the YOU DIED sequence
-function triggerDeath(){
-  playing = false;
-  clearInterval(gameInterval);
-  cancelAnimationFrame(loopId);
-  if(blastInterval) clearInterval(blastInterval);
-
-  // Show "YOU DIED"
-  deathScreen.classList.remove('hidden');
-
-  // Wait 2 seconds, then show original lose screen
-  setTimeout(() => {
-    deathScreen.classList.add('hidden');
-    lose();
-  }, 2000);
-}
-
-function lose(){
-  playing = false;
-  
-  gameScreen.classList.add('hidden');
-  end.classList.remove('hidden');
-  
-  // Reset visual elements
-  gojo.classList.add('hidden');
-  gojo.style.right = '-200px'; // Reset slide position
-  gojo.style.opacity = '0';
-  purple.classList.add('hidden');
-  
-  end.innerHTML = `
-    <h2>Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️</h2>
-    <br>
-    <div class="buttons">
-      <button onclick="win()" style="background:#ff5fa2; color:fff;">YES</button>
-      <button onclick="restartGame()" style="background:#444; color:fff;">RESTART</button>
-    </div>
-  `;
-}
-
-// Global functions for the innerHTML buttons
-window.win = function(){
-  start.classList.add('hidden');
-  gameScreen.classList.add('hidden');
-  end.classList.remove('hidden');
-  end.innerHTML = "<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
-}
-
-window.restartGame = function(){
-  end.classList.add('hidden');
-  gameScreen.classList.remove('hidden');
-
-  // Clean up old obstacles
-  obstacles.forEach(o => o.remove());
-  obstacles = [];
-  passed = 0;
-  y = 0; vy = 0;
-  noCount = 14; // Keep difficulty or logic state
-
-  // Remove finish line if it exists
-  const finishLine = document.getElementById('finish');
-  if(finishLine) finishLine.remove();
-  
-  const finishText = document.getElementById('finishText');
-  if(finishText) finishText.remove();
-
-  gojo.style.right = '-200px';
-  gojo.style.opacity = '0';
-  
-  startGame();
-}
-</script>
-</body>
-</html>
+  obstacles.push(o
+                 
