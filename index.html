@@ -156,8 +156,8 @@ function loop(){
   loopId=requestAnimationFrame(loop);  
 }  
   
-// Jump (Reduced height for harder game)  
-game.onclick = ()=>{if(playing && y===0) vy=10;};  
+// Jump (Reduced height to 6)  
+game.onclick = ()=>{if(playing && y===0) vy=6;};  
   
 // --- FINISH SEQUENCE ---  
 function finish(){  
