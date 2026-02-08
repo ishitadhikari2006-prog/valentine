@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Valentine Game</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
@@ -11,7 +11,8 @@
     background: #ffffff;
     color: #000000;
     overflow: hidden;
-    touch-action: manipulation; /* Improves mobile touch response */
+    touch-action: none; /* Critical for mobile game control */
+    user-select: none;
   }
   .screen {
     z-index: 1;
@@ -84,7 +85,7 @@
     bottom: 130px;
     width: 140px;
     opacity: 0;
-    transition: right 0.8s ease, opacity 0.8s ease;
+    transition: right 1s ease-out, opacity 0.5s; /* Smooth slide animation */
     z-index: 6;
   }
   #purple {
@@ -95,6 +96,22 @@
     background: purple;
     filter: blur(6px);
     z-index: 7;
+  }
+
+  /* --- ADDED: YOU DIED SCREEN STYLE --- */
+  #deathScreen {
+    position: absolute;
+    inset: 0;
+    background: black;
+    color: red;
+    z-index: 999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 4rem;
+    font-weight: bold;
+    font-family: 'Courier New', Courier, monospace;
+    text-shadow: 0 0 10px darkred;
   }
 </style>
 </head>
@@ -117,6 +134,8 @@
 <img id="gojo" src="gojo.png" class="hidden">
 <div id="purple" class="hidden"></div>
 
+<div id="deathScreen" class="hidden">YOU DIED</div>
+
 <div id="end" class="screen hidden" style="z-index:15"></div>
 
 <script>
@@ -128,6 +147,8 @@ const noBtn = document.getElementById('noBtn');
 const jerry = document.getElementById('jerry');
 const gojo = document.getElementById('gojo');
 const purple = document.getElementById('purple');
+// Added variable so Part 2 can use it
+const deathScreen = document.getElementById('deathScreen');
 
 let noCount = 0;
 let y = 0, vy = 0;
@@ -136,6 +157,7 @@ let passed = 0;
 let playing = false;
 let gameInterval;
 let loopId;
+let blastInterval;
 
 // Yes Button Logic
 yesBtn.onclick = (e) => {
@@ -156,16 +178,13 @@ noBtn.onclick = (e) => {
     startGame();
   }
 };
- // --- PART 2: GAME LOGIC (Paste this after Part 1) ---
-
-function startGame(){
+ function startGame(){
   playing = true;
   y = 0; vy = 0;
   passed = 0;
   jerry.style.bottom = '80px';
   obstacles = [];
   
-  // Clear any existing timers to prevent bugs
   if(gameInterval) clearInterval(gameInterval);
   if(loopId) cancelAnimationFrame(loopId);
 
@@ -185,7 +204,6 @@ function spawnObstacle(){
 function loop(){
   if(!playing) return;
   
-  // Gravity logic
   vy -= 0.6;
   y += vy;
   if(y < 0) { y = 0; vy = 0; }
@@ -194,12 +212,11 @@ function loop(){
   obstacles.forEach((o, i) => {
     o.style.left = (o.offsetLeft - 5) + 'px';
     
-    // Collision Detection -> Triggers YOU DIED
+    // Collision Detection
     if(o.offsetLeft < 90 && o.offsetLeft > 40 && y < 50){
       triggerDeath();
     }
     
-    // Remove obstacle if off screen
     if(o.offsetLeft < -30){
       o.remove();
       obstacles.splice(i, 1);
@@ -211,18 +228,12 @@ function loop(){
   loopId = requestAnimationFrame(loop);
 }
 
-// --- JUMP LOGIC FIXED FOR MOBILE ---
-// This listens to the whole window so taps work everywhere
+// FIXED JUMP CONTROLS (Tapping anywhere works)
 function jump(e) {
   if(!playing) return;
-  
-  // This line stops the screen from scrolling/zooming when you tap
   if(e.type === 'touchstart' && e.cancelable) e.preventDefault();
-  
   if(y < 10) vy = 14; 
 }
-
-// Add listeners to window instead of gameScreen
 window.addEventListener('touchstart', jump, {passive: false});
 window.addEventListener('mousedown', jump);
 
@@ -241,7 +252,6 @@ function finish(){
   t.innerText = "No I don't";
   gameScreen.appendChild(t);
   
-  // Start Gojo Sequence
   setTimeout(gojoAttack, 500);
 }
 
@@ -249,14 +259,12 @@ function gojoAttack(){
   gojo.classList.remove('hidden');
   
   // 1. SLIDE IN
-  // We manually set styles here to ensure animation works
-  gojo.style.transition = "right 1s ease-out";
   setTimeout(() => {
-    gojo.style.right = "20px"; // Slide onto screen
-    gojo.style.opacity = "1";
+    gojo.style.right = '20px';
+    gojo.style.opacity = '1';
   }, 50);
 
-  // 2. WAIT, THEN THROW HOLLOW PURPLE
+  // 2. WAIT, THEN THROW
   setTimeout(() => {
       purple.classList.remove('hidden');
       
@@ -264,53 +272,30 @@ function gojoAttack(){
       purple.style.bottom = '150px';
       purple.style.left = x + 'px'; 
 
-      // Attack Loop
       const blast = setInterval(() => {
         x -= 15;
         purple.style.left = x + 'px';
         
-        // Impact with Jerry
         if(x < 80){ 
           clearInterval(blast);
           triggerDeath();
         }
       }, 16);
-  }, 1500); // 1.5 Second Wait
+  }, 1500); // 1.5 seconds wait
 }
 
-// --- DEATH LOGIC (Fixes the stuck game) ---
+// DEATH FUNCTION (Prevents freezing)
 function triggerDeath(){
   playing = false;
   clearInterval(gameInterval);
   cancelAnimationFrame(loopId);
   
-  // Check if deathScreen exists, if not create it (Prevents crashing)
-  let ds = document.getElementById('deathScreen');
-  if(!ds) {
-      ds = document.createElement('div');
-      ds.id = 'deathScreen';
-      ds.innerText = 'YOU DIED';
-      // Style it dynamically to ensure it shows up
-      ds.style.position = 'absolute';
-      ds.style.inset = '0';
-      ds.style.background = 'black';
-      ds.style.color = 'red';
-      ds.style.zIndex = '999';
-      ds.style.display = 'flex';
-      ds.style.justifyContent = 'center';
-      ds.style.alignItems = 'center';
-      ds.style.fontSize = '4rem';
-      ds.style.fontWeight = 'bold';
-      document.body.appendChild(ds);
-  }
-  
-  ds.classList.remove('hidden');
-  ds.style.display = 'flex'; // Force show
+  // Show YOU DIED
+  deathScreen.classList.remove('hidden');
 
   // Wait 2 seconds, then show lose screen
   setTimeout(() => {
-    ds.classList.add('hidden');
-    ds.style.display = 'none';
+    deathScreen.classList.add('hidden');
     lose();
   }, 2000);
 }
@@ -321,9 +306,9 @@ function lose(){
   gameScreen.classList.add('hidden');
   end.classList.remove('hidden');
   
-  // Reset Gojo/Purple positions for next time
-  gojo.style.right = "-300px";
-  gojo.style.opacity = "0";
+  // Reset Animations
+  gojo.style.right = '-300px';
+  gojo.style.opacity = '0';
   gojo.classList.add('hidden');
   purple.classList.add('hidden');
   
@@ -337,7 +322,6 @@ function lose(){
   `;
 }
 
-// Global functions for buttons
 window.win = function(){
   start.classList.add('hidden');
   gameScreen.classList.add('hidden');
@@ -361,9 +345,11 @@ window.restartGame = function(){
   const finishText = document.getElementById('finishText');
   if(finishText) finishText.remove();
 
-  gojo.style.right = "-300px";
+  gojo.style.right = '-300px';
   gojo.classList.add('hidden');
   
   startGame();
 }
-         
+</script>
+</body>
+</html>
