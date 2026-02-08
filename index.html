@@ -90,26 +90,38 @@
     z-index: 5;
   }
 
-  /* GOJO & PURPLE - Highest Z-Index to ensure visibility */
+  /* --- GOJO & PURPLE ANIMATION STYLES --- */
+  
   #gojo {
     position: absolute;
-    right: -300px; /* Start hidden off-screen */
-    bottom: 80px;  /* Same level as ground */
-    width: 180px;  /* Big enough to see */
-    z-index: 999;  /* ON TOP OF EVERYTHING */
-    transition: right 1s ease-out; /* Smooth slide in */
+    right: 20px;    /* Fixed position on right side */
+    bottom: 80px;   /* Standing on ground */
+    width: 160px;   
+    z-index: 100;   /* Top layer */
+    
+    /* POP UP ANIMATION SETUP */
+    transform: scale(0); /* Start tiny (hidden) */
+    opacity: 0;
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s;
     pointer-events: none;
   }
+  
+  /* Class to trigger the pop */
+  #gojo.appear {
+    transform: scale(1); /* Pop to full size */
+    opacity: 1;
+  }
+
   #purple {
     position: absolute;
-    width: 50px;
-    height: 50px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     background: radial-gradient(circle, #fff, #800080, #4b004b);
     box-shadow: 0 0 20px 10px purple;
     filter: blur(2px);
-    z-index: 1000; /* Above Gojo */
-    opacity: 0;
+    z-index: 101; /* Above Gojo */
+    opacity: 0;   /* Hidden initially */
     pointer-events: none;
   }
 </style>
@@ -211,7 +223,7 @@ function loop(){
   obstacles.forEach((o, i) => {
     o.style.left = (o.offsetLeft - 6) + 'px';
     
-    // Collision (Loss)
+    // Collision (Loss by hitting wall)
     if(o.offsetLeft < 90 && o.offsetLeft > 40 && y < 55){
       showLoseScreen(); 
     }
@@ -232,7 +244,7 @@ function loop(){
 // --- The Ending Sequence ---
 
 function finishSequence(){
-  playing = false; // Stop game loop
+  playing = false; // Stop game loop immediately
   clearInterval(gameInterval);
   cancelAnimationFrame(loopId);
 
@@ -246,39 +258,43 @@ function finishSequence(){
   t.innerText = "No I don't!";
   gameScreen.appendChild(t);
 
-  // 2. Bring Gojo in immediately
-  setTimeout(showGojo, 500);
-}
+  // 2. Pop Gojo Up!
+  setTimeout(() => {
+    gojo.classList.add('appear'); // Triggers the CSS scale pop
+  }, 500);
 
-function showGojo(){
-    // Slide Gojo in from the right
-    gojo.style.right = '0px'; 
-    
-    // 3. WAIT 1.5 Seconds so user sees him, THEN fire purple
-    setTimeout(firePurple, 1500);
+  // 3. WAIT so user sees Gojo, then throw Hollow Purple
+  setTimeout(() => {
+    firePurple();
+  }, 1500); // 1.5 seconds later
 }
 
 function firePurple(){
-    // Position purple ball at Gojo's hand
+    // Setup initial purple ball position (in Gojo's hand)
     purple.style.opacity = '1';
-    purple.style.right = '120px'; // Near Gojo's hand
+    purple.style.right = '140px'; 
     purple.style.bottom = '150px';
+    
+    // Ensure it's visible
+    purple.classList.remove('hidden');
 
-    let purplePos = window.innerWidth - 120; // Current X position
+    // Calculate start X position based on screen width
+    let purplePos = window.innerWidth - 140; 
 
-    // Animate the ball moving left
+    // Animate the ball moving LEFT towards Jerry
     blastInterval = setInterval(() => {
-        purplePos -= 15; // Move speed
+        purplePos -= 15; // Speed of ball
         purple.style.left = purplePos + 'px';
 
-        // Collision with Jerry
+        // Collision with Jerry (approx x=80)
         if(purplePos < 80){
             clearInterval(blastInterval);
-            // Hide Jerry and Ball to simulate explosion
+            
+            // Explosion effect
             jerry.classList.add('hidden');
             purple.classList.add('hidden');
             
-            // Short delay before showing the final screen
+            // Show Game Over screen
             setTimeout(showLoseScreen, 500);
         }
     }, 16);
@@ -293,8 +309,8 @@ function showLoseScreen(){
   gameScreen.classList.add('hidden');
   end.classList.remove('hidden');
   
-  // Hide props
-  gojo.style.right = '-300px'; 
+  // Hide props for next time
+  gojo.classList.remove('appear'); 
   purple.style.opacity = '0';
   
   end.innerHTML = `
@@ -323,9 +339,13 @@ window.restartGame = function(){
   obstacles = [];
   document.getElementById('finish')?.remove();
   document.getElementById('finishText')?.remove();
+  
   jerry.classList.remove('hidden');
   purple.classList.remove('hidden'); 
-  purple.style.opacity = '0'; // Hide ball initially
+  purple.style.opacity = '0'; 
+  
+  // Ensure Gojo is hidden and scaled down
+  gojo.classList.remove('appear');
   
   // Reset difficulty
   noCount = 10; 
