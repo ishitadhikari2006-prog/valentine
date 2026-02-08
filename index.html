@@ -78,35 +78,36 @@
     font-weight: bold;
   }
 
-  /* --- MODIFIED GOJO STYLES FOR POP-UP EFFECT --- */
+  /* --- CHANGED: Gojo Pop-up Styles --- */
   #gojo {
     position: absolute;
     right: 20px;   /* Fixed position */
-    bottom: 80px;
-    width: 150px;
-    z-index: 100;  /* High Z-index */
+    bottom: 130px;
+    width: 140px;
+    z-index: 6;
     
-    /* Start hidden by scale */
+    /* Start hidden (scaled down) */
     transform: scale(0);
-    opacity: 1;
-    /* Bouncy pop animation */
-    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    opacity: 0;
+    /* Pop animation */
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s;
   }
   
-  /* The class that triggers the pop */
+  /* Class to trigger the pop */
   #gojo.pop {
     transform: scale(1);
+    opacity: 1;
   }
 
   #purple {
     position: absolute;
-    width: 40px;
-    height: 40px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     background: purple;
     filter: blur(6px);
-    z-index: 101; /* Above Gojo */
-    box-shadow: 0 0 15px 5px rgba(128,0,128,0.8);
+    z-index: 7;
+    opacity: 0; /* Hidden initially */
   }
 </style>
 </head>
@@ -126,8 +127,8 @@
   <div id="ground"></div>
 </div>
 
-<img id="gojo" src="gojo.png" class="hidden">
-<div id="purple" class="hidden"></div>
+<img id="gojo" src="gojo.png">
+<div id="purple"></div>
 
 <div id="end" class="screen hidden" style="z-index:15"></div>
 
@@ -148,7 +149,7 @@ let passed = 0;
 let playing = false;
 let gameInterval;
 let loopId;
-let blastInterval; // Added to manage the attack loop
+let blastInterval; // To control the purple ball loop
 
 // Yes Button Logic
 yesBtn.onclick = (e) => {
@@ -197,10 +198,12 @@ function loop(){
   obstacles.forEach((o, i) => {
     o.style.left = (o.offsetLeft - 5) + 'px';
     
+    // Collision Detection
     if(o.offsetLeft < 90 && o.offsetLeft > 40 && y < 50){
       lose();
     }
     
+    // Remove obstacle if off screen
     if(o.offsetLeft < -30){
       o.remove();
       obstacles.splice(i, 1);
@@ -212,6 +215,7 @@ function loop(){
   loopId = requestAnimationFrame(loop);
 }
 
+// Jump Logic
 gameScreen.onclick = () => { 
   if(playing && y === 0) vy = 14; 
 };
@@ -230,35 +234,31 @@ function finish(){
   t.innerText = "No I don't";
   gameScreen.appendChild(t);
   
-  // --- UPDATED ANIMATION LOGIC ---
-  
-  // 1. Reveal Gojo (Pop Up)
-  gojo.classList.remove('hidden');
-  
-  // Slight delay to allow CSS to catch the state change before adding 'pop'
+  // --- CHANGED: Gojo Pop Up Logic ---
+  // 1. Pop Gojo Up
   setTimeout(() => {
-    gojo.classList.add('pop'); 
-  }, 50);
+    gojo.classList.add('pop');
+  }, 200);
 
-  // 2. Wait 1.2 seconds so you see him, THEN attack
-  setTimeout(gojoAttack, 1200);
+  // 2. Wait 1.2 seconds, THEN throw purple
+  setTimeout(gojoAttack, 1400);
 }
 
 function gojoAttack(){
   purple.classList.remove('hidden');
+  purple.style.opacity = '1';
 
-  // Set initial position (Gojo's hand)
-  purple.style.right = '120px'; 
+  // Start position relative to Gojo
+  let x = window.innerWidth - 120;
+  purple.style.left = x + 'px';
   purple.style.bottom = '150px';
-  purple.style.left = 'auto'; // Reset left if set previously
-
-  let x = window.innerWidth - 120; // Start X position
 
   blastInterval = setInterval(() => {
-    x -= 15; // Move left
+    x -= 15; // Speed of ball
     purple.style.left = x + 'px';
     
-    if(x < 80){ // Impact with Jerry
+    // Impact with Jerry
+    if(x < 80){ 
       clearInterval(blastInterval);
       lose();
     }
@@ -274,9 +274,8 @@ function lose(){
   gameScreen.classList.add('hidden');
   end.classList.remove('hidden');
   
-  // Hide props
-  gojo.classList.add('hidden');
-  gojo.classList.remove('pop'); // Reset pop scale
+  // Reset props
+  gojo.classList.remove('pop'); 
   purple.classList.add('hidden');
   
   end.innerHTML = `
@@ -289,6 +288,7 @@ function lose(){
   `;
 }
 
+// Global functions
 window.win = function(){
   start.classList.add('hidden');
   gameScreen.classList.add('hidden');
@@ -313,9 +313,9 @@ window.restartGame = function(){
   const finishText = document.getElementById('finishText');
   if(finishText) finishText.remove();
 
-  // Reset Gojo State
+  // Reset Gojo
   gojo.classList.remove('pop');
-  gojo.classList.add('hidden');
+  purple.classList.add('hidden');
   
   startGame();
 }
