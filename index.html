@@ -42,9 +42,10 @@ body{
 .obstacle{
   position:absolute;
   bottom:84px;
-  width:45px;
+  width:32px; /* reduced width */
   height:45px;
   background:#ff2e2e;
+  border-radius:6px;
 }
 #overlay{
   position:fixed;
@@ -91,7 +92,14 @@ body{
 </div><img id="gojo" src="gojo.png">
 <div id="purple"></div><div id="overlay">
   <h1 id="endText"></h1>
-  <button onclick="restartGame()">Restart</button>
+  <div id="valentine" style="display:none;flex-direction:column;gap:20px">
+    <h2>Will you be my Valentine, Nandini? 💖</h2>
+    <div style="display:flex;gap:20px;justify-content:center">
+      <button id="yesBtn">YES 😍</button>
+      <button id="noBtn">NO 😒</button>
+    </div>
+  </div>
+  <button id="restartBtn" onclick="restartGame()">Restart Game</button>
 </div><script>
 const mouse=document.getElementById('mouse');
 const game=document.getElementById('game');
@@ -150,7 +158,9 @@ function createObstacle(){
 function endFail(){
   gameOver=true;
   overlay.style.display='flex';
-  endText.innerText='So… do you agree your boyfriend is always right and want to be his Valentine? 😼';
+  document.getElementById('restartBtn').style.display='block';
+  document.getElementById('valentine').style.display='none';
+  endText.innerText='So… do you agree your boyfriend is always right in arguments? 😼';
 }
 
 function endWin(){
@@ -163,6 +173,8 @@ function endWin(){
     if(gx>20){clearInterval(slide);shoot();}
   },30);
 }
+  },30);
+}
 
 function shoot(){
   purple.style.display='block';
@@ -172,13 +184,42 @@ function shoot(){
     x-=18; y+=6;
     purple.style.left=x+'px';
     purple.style.top=y+'px';
-    if(x<100){clearInterval(blast); endFail();}
+    if(x<100){
+      clearInterval(blast);
+      showValentine();
+    }
+  },30);
+}
   },30);
 }
 
 function restartGame(){
   location.reload();
 }
+
+const yesBtn=document.getElementById('yesBtn');
+const noBtn=document.getElementById('noBtn');
+let yesScale=1;
+let noScale=1;
+
+function showValentine(){
+  overlay.style.display='flex';
+  endText.innerText='';
+  document.getElementById('restartBtn').style.display='none';
+  const v=document.getElementById('valentine');
+  v.style.display='flex';
+}
+
+yesBtn.onclick=()=>{
+  document.body.innerHTML='<h1 style="color:white;text-align:center;margin-top:40vh">🎉 Congratulations Nandini 🎉<br>You are officially Mr Ishit’s Valentine 😼💖🎈</h1>';
+};
+
+noBtn.onclick=()=>{
+  yesScale+=0.15;
+  noScale-=0.1;
+  yesBtn.style.transform=`scale(${yesScale})`;
+  noBtn.style.transform=`scale(${Math.max(noScale,0.4)})`;
+};
 
 setInterval(createObstacle,1600);
 </script></body>
