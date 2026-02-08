@@ -5,41 +5,35 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Valentine Game</title>
 <style>
-  /* --- RESET & BASIC SETUP --- */
   *{margin:0;padding:0;box-sizing:border-box;}
   body{font-family:Arial,sans-serif;background:#fff;color:#000;overflow:hidden;}
   .screen{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px;}
   .hidden{display:none !important;}
-
-  /* --- BUTTONS --- */
+  
   button{padding:16px 36px;font-size:1.2rem;border:none;border-radius:14px;cursor:pointer; transition: transform 0.2s;}
   #yesBtn{background:#ff5fa2;color:#fff;}
   #noBtn{background:#444;color:#fff;}
   .buttons{display:flex;gap:20px;margin-top:30px;}
-
-  /* --- GAME ELEMENTS --- */
+  
   #game{justify-content:flex-start;}
   #title{margin-top:20px;font-size:1.3rem;font-weight:bold;}
   #ground{position:absolute;bottom:80px;width:100%;height:4px;background:#aaa;}
-
-  /* CHARACTERS */
+  
   #jerry{position:absolute;bottom:80px;left:40px;width:60px; z-index: 2;}
   .obstacle{position:absolute;bottom:80px;width:20px;height:60px;background:#ff5fa2;}
-
-  /* FINISH WALL */
+  
   #finish{position:absolute;bottom:80px;right:40px;width:6px;height:90px;background:black;}
   #finishText{position:absolute;bottom:180px;right:20px;font-weight:bold;}
-
-  /* --- GOJO & ANIMATION STYLES --- */
+  
   #gojo {
     position: absolute;
     bottom: 80px;
-    right: -300px; /* Starts off-screen */
+    right: -300px;
     width: 140px;
     z-index: 3;
     transition: right 1.5s cubic-bezier(0.25, 0.8, 0.25, 1);
   }
-
+  
   #purple {
     position: absolute;
     width: 40px;
@@ -49,10 +43,9 @@
     filter: blur(4px);
     box-shadow: 0 0 20px 10px rgba(128,0,128,0.7);
     z-index: 4;
-    display: none; /* Hidden until thrown */
+    display: none;
   }
-
-  /* --- VIDEO SCREEN --- */
+  
   #videoScreen {
     position: absolute;
     inset:0;
@@ -68,12 +61,10 @@
     height:100%;
     object-fit:cover;
   }
-
 </style>
 </head>
 <body>
 
-<!-- START SCREEN -->
 <div id="start" class="screen">
   <h2>Do you accept your bf is always right in every argument and you wanna be his Valentine 😼❤️</h2>
   <div class="buttons">
@@ -82,18 +73,15 @@
   </div>
 </div>
 
-<!-- GAME SCREEN -->
 <div id="game" class="screen hidden">
   <div id="title">RUN LITTLE MOUSE RUN</div>
   <img id="jerry" src="jerry.png">
   <div id="ground"></div>
 </div>
 
-<!-- GOJO AND PURPLE -->
 <img id="gojo" src="gojo.png">
 <div id="purple"></div>
 
-<!-- VIDEO SCREEN -->
 <div id="videoScreen" class="hidden">
   <video id="introVideo">
     <source src="intro.mp4" type="video/mp4">
@@ -101,7 +89,6 @@
   </video>
 </div>
 
-<!-- END SCREEN -->
 <div id="end" class="screen hidden"></div>
 
 <script>
@@ -119,20 +106,20 @@ const introVideo = document.getElementById('introVideo');
 let noCount=0, y=0, vy=0, obstacles=[], passed=0, playing=false;
 let gameInterval, loopId, purpleInterval;
 
-// --- INITIAL YES BUTTON ---
+// --- YES BUTTON ---
 yesBtn.onclick = () => {
   start.classList.add('hidden');
   end.classList.remove('hidden');
   end.innerHTML="<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
 };
 
-// --- INITIAL NO BUTTON ---
+// --- NO BUTTON ---
 noBtn.onclick = () => {
   noCount++;
   noBtn.style.transform = `scale(${Math.max(0.2,1-noCount*0.06)})`;
   yesBtn.style.transform = `scale(${1+noCount*0.08})`;
   if(noCount===14){
-    // Play video first
+    // Play video
     videoScreen.classList.remove('hidden');
     introVideo.currentTime = 0;
     introVideo.play();
@@ -165,23 +152,19 @@ function spawnObstacle(){
 function loop(){
   if(!playing) return;
 
-  // Gravity
   vy -= 0.6;
   y += vy;
   if(y<0){y=0; vy=0;}
   jerry.style.bottom = 80+y+'px';
 
-  // Obstacles
   obstacles.forEach((o,i)=>{
     let currentLeft = o.offsetLeft;
     o.style.left = (currentLeft-5)+'px';
 
-    // Collision
     if(currentLeft < 90 && currentLeft > 40 && y<50){
       showFinalOptions();
     }
 
-    // Passed obstacle
     if(currentLeft<-30){
       o.remove();
       obstacles.splice(i,1);
@@ -257,7 +240,6 @@ function showFinalOptions(){
   </div>`;
 }
 
-// --- BUTTON HELPERS ---
 window.finalYes = function(){
   end.innerHTML="<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
 }
