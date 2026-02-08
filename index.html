@@ -5,23 +5,51 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Valentine Game</title>
 <style>
+/* CSS STYLES */
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:Arial,sans-serif;background:#fff;color:#000;overflow:hidden;}
-.screen{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px;}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px; z-index: 10;}
 .hidden{display:none;}
+
 button{padding:16px 36px;font-size:1.2rem;border:none;border-radius:14px;cursor:pointer;}
-#yesBtn{background:#ff5fa2;color:#fff;}
-#noBtn{background:#444;color:#fff;}
+#yesBtn{background:#ff5fa2;color:#fff; transition: transform 0.2s;}
+#noBtn{background:#444;color:#fff; transition: transform 0.2s;}
 .buttons{display:flex;gap:20px;margin-top:30px;}
-#game{justify-content:flex-start;}
+
+#game{justify-content:flex-start; z-index: 1;}
 #title{margin-top:20px;font-size:1.3rem;font-weight:bold;}
 #ground{position:absolute;bottom:80px;width:100%;height:4px;background:#aaa;}
-#jerry{position:absolute;bottom:80px;left:40px;width:60px;}
+
+/* CHARACTERS & OBJECTS */
+#jerry{position:absolute;bottom:80px;left:40px;width:60px; height:auto; z-index: 2;}
 .obstacle{position:absolute;bottom:80px;width:20px;height:60px;background:#ff5fa2;}
+
 #finish{position:absolute;bottom:80px;right:40px;width:6px;height:90px;background:black;}
 #finishText{position:absolute;bottom:180px;right:20px;font-weight:bold;}
-#gojo{position:absolute;right:-200px;bottom:130px;width:140px;opacity:0;}
-#purple{position:absolute;width:30px;height:30px;border-radius:50%;background:purple;filter:blur(6px);}
+
+/* GOJO & PURPLE STYLES */
+#gojo{
+  position:absolute;
+  right:-300px; /* Start off screen */
+  bottom:80px;
+  width:150px; 
+  height:auto;
+  transition: right 1s ease-out; /* Smooth slide in */
+  z-index: 3;
+}
+
+#purple{
+  position:absolute;
+  width:40px; 
+  height:40px; 
+  border-radius:50%; 
+  background:purple; 
+  box-shadow: 0 0 15px 5px rgba(128, 0, 128, 0.8);
+  filter:blur(2px);
+  z-index: 4;
+  bottom: 130px; /* Aligned with Gojo's hand approx */
+  display: none; /* Hidden initially */
+}
 </style>
 </head>
 <body>
@@ -36,16 +64,17 @@ button{padding:16px 36px;font-size:1.2rem;border:none;border-radius:14px;cursor:
 
 <div id="game" class="screen hidden">
   <div id="title">RUN LITTLE MOUSE RUN</div>
-  <img id="jerry" src="jerry.png">
+  <img id="jerry" src="jerry.png" alt="Jerry">
   <div id="ground"></div>
 </div>
 
-<img id="gojo" src="gojo.png" class="hidden">
-<div id="purple" class="hidden"></div>
+<img id="gojo" src="gojo.png" alt="Gojo">
+<div id="purple"></div>
 
 <div id="end" class="screen hidden"></div>
 
 <script>
+// --- DOM ELEMENTS ---
 const start = document.getElementById('start');
 const game = document.getElementById('game');
 const end = document.getElementById('end');
@@ -55,20 +84,20 @@ const jerry = document.getElementById('jerry');
 const gojo = document.getElementById('gojo');
 const purple = document.getElementById('purple');
 
+// --- GAME VARIABLES ---
 let noCount=0, y=0, vy=0, obstacles=[], passed=0, playing=false;
-let gameInterval, loopId, blastInterval;
+let gameInterval, loopId, purpleInterval;
 
-// --- Buttons ---
-yesBtn.onclick = () => {
-  start.classList.add('hidden');
-  end.classList.remove('hidden');
-  end.innerHTML="<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
-};
+// --- INITIAL YES/NO LOGIC ---
+yesBtn.onclick = () => winGame();
 
 noBtn.onclick = () => {
   noCount++;
+  // Shrink No, Grow Yes
   noBtn.style.transform = `scale(${Math.max(0.2,1-noCount*0.06)})`;
   yesBtn.style.transform = `scale(${1+noCount*0.08})`;
+  
+  // Trigger Game after 14 clicks
   if(noCount>=14){
     start.classList.add('hidden');
     game.classList.remove('hidden');
@@ -76,9 +105,11 @@ noBtn.onclick = () => {
   }
 };
 
-// --- Game Loop ---
+// --- GAME FUNCTIONS ---
 function startGame(){
   playing=true;
+  passed=0;
+  // Spawn obstacles every 1.5 seconds
   gameInterval=setInterval(spawnObstacle,1500);
   loopId=requestAnimationFrame(loop);
 }
@@ -87,125 +118,159 @@ function spawnObstacle(){
   if(!playing) return;
   const o = document.createElement('div');
   o.className = 'obstacle';
-  o.style.left = '100%';
+  o.style.left = '100%'; // Start at right edge
   game.appendChild(o);
   obstacles.push(o);
 }
 
 function loop(){
   if(!playing) return;
+  
+  // Gravity Logic
   vy -= 0.6;
   y += vy;
   if(y<0){y=0; vy=0;}
-  jerry.style.bottom = 80+y+'px';
+  jerry.style.bottom = (80+y)+'px';
 
+  // Obstacle Logic
   obstacles.forEach((o,i)=>{
-    o.style.left = (o.offsetLeft-5)+'px';
-    if(o.offsetLeft<90 && o.offsetLeft>40 && y<50) showEndButtons();
-    if(o.offsetLeft<-30){o.remove(); obstacles.splice(i,1); passed++; if(passed===14) finish();}
+    let currentLeft = parseFloat(o.style.left || 100);
+    // Move obstacle left (using percentages for simple responsive hack, or pixels)
+    // Let's use pixels based on offsetLeft for smoother movement
+    let newLeft = o.offsetLeft - 5;
+    o.style.left = newLeft + 'px';
+
+    // Collision Detection
+    // Jerry is approx at left:40px with width 60px (range 40-100)
+    if(newLeft < 90 && newLeft > 40 && y < 50){
+       gameOver(); // Hit obstacle
+    }
+
+    // Pass Obstacle
+    if(newLeft < -30){
+      o.remove(); 
+      obstacles.splice(i,1); 
+      passed++; 
+      if(passed===14) finishSequence(); // Win Condition
+    }
   });
 
   loopId=requestAnimationFrame(loop);
 }
 
-game.onclick = ()=>{if(playing && y===0) vy=14;};
+// Jump Event
+game.onclick = ()=>{ if(playing && y===0) vy=14; };
 
-// --- Finish ---
-function finish(){
-  playing=false;
-  clearInterval(gameInterval);
+// --- ENDING SEQUENCES ---
 
+// 1. Initial Finish (Wall appears)
+function finishSequence(){
+  playing=false; // Stop player inputs
+  clearInterval(gameInterval); // Stop spawning
+  cancelAnimationFrame(loopId); // Stop physics loop
+
+  // Create the "No I don't" wall
   const f = document.createElement('div');
   f.id = 'finish';
   game.appendChild(f);
+  
   const t = document.createElement('div');
   t.id = 'finishText';
   t.innerText="No I don't";
   game.appendChild(t);
 
-  setTimeout(gojoSlide,800);
+  // Trigger Gojo after a short delay
+  setTimeout(triggerGojo, 1000);
 }
 
-// --- Gojo Slide Animation ---
-function gojoSlide(){
-  gojo.classList.remove('hidden');
-  gojo.style.opacity='1';
+// 2. Gojo Slides In
+function triggerGojo(){
+  // Move Gojo onto screen
+  gojo.style.right = '20px'; 
   
-  const stopRight = 100; // pixels from right to stop
-  let startRight = -200;
-  gojo.style.right = startRight+'px';
-
-  const slideDuration = 1000; // ms
-  const startTime = performance.now();
-
-  function animate(time){
-    let elapsed = time - startTime;
-    let progress = Math.min(elapsed/slideDuration,1);
-    gojo.style.right = (startRight + (stopRight - startRight)*progress)+'px';
-    if(progress<1){
-      requestAnimationFrame(animate);
-    } else {
-      // wait 1s then throw hollow purple
-      setTimeout(throwPurple,1000);
-    }
-  }
-  requestAnimationFrame(animate);
+  // Wait 1.5 seconds, then throw Purple
+  setTimeout(throwHollowPurple, 1500);
 }
 
-// --- Throw Purple Hollow ---
-function throwPurple(){
-  purple.classList.remove('hidden');
-  purple.style.bottom = '150px';
-  let px = parseFloat(gojo.style.right) + 140; // start at Gojo's front
-  purple.style.left = px + 'px';
+// 3. Hollow Purple Attack
+function throwHollowPurple(){
+  purple.style.display = 'block';
+  // Start position (relative to screen, near Gojo)
+  let startX = window.innerWidth - 180; 
+  let currentX = startX;
+  purple.style.left = currentX + 'px';
 
-  blastInterval = setInterval(()=>{
-    px -= 15;
-    purple.style.left = px+'px';
-    if(px < 80 && y<50){ // hit Jerry
-      clearInterval(blastInterval);
-      showEndButtons();
+  // Animate Purple moving Left
+  purpleInterval = setInterval(() => {
+    currentX -= 15; // Speed of orb
+    purple.style.left = currentX + 'px';
+
+    // Collision with Jerry (Jerry is at left:40px)
+    if(currentX < 80){
+      clearInterval(purpleInterval);
+      purple.style.display = 'none'; // Hide orb
+      gameOver(); // Trigger the exact same game over screen
     }
-  },16);
+  }, 16);
 }
 
-// --- Show end buttons ---
-function showEndButtons(){
-  playing=false;
+// --- GAME OVER / RESTART SCREEN ---
+function gameOver(){
+  playing = false;
   clearInterval(gameInterval);
   cancelAnimationFrame(loopId);
-  clearInterval(blastInterval);
+  if(purpleInterval) clearInterval(purpleInterval);
 
   game.classList.add('hidden');
-  gojo.classList.add('hidden');
-  purple.classList.add('hidden');
-  end.classList.remove('hidden');
+  
+  // Hide Gojo elements if they are active
+  gojo.style.right = '-300px'; 
+  purple.style.display = 'none';
 
-  end.innerHTML = `<h2>Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️</h2>
-  <div class="buttons">
-    <button onclick="win()" style="background:#ff5fa2;color:#fff;">YES</button>
-    <button onclick="restartGame()" style="background:#444;color:#fff;">RESTART</button>
-  </div>`;
+  end.classList.remove('hidden');
+  end.innerHTML = `
+    <h2>Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️</h2>
+    <div class="buttons">
+      <button onclick="winGame()" style="background:#ff5fa2;color:#fff;padding:16px 36px;font-size:1.2rem;border:none;border-radius:14px;cursor:pointer;">YES</button>
+      <button onclick="restartGame()" style="background:#444;color:#fff;padding:16px 36px;font-size:1.2rem;border:none;border-radius:14px;cursor:pointer;">RESTART</button>
+    </div>
+  `;
 }
 
-function win(){
+// --- GLOBAL HELPER FUNCTIONS ---
+
+// Final Win State
+window.winGame = function(){
+  start.classList.add('hidden');
+  game.classList.add('hidden');
+  end.classList.remove('hidden');
   end.innerHTML="<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
 }
 
-function restartGame(){
+// Restart Game State
+window.restartGame = function(){
   end.classList.add('hidden');
   game.classList.remove('hidden');
-  obstacles.forEach(o=>o.remove()); obstacles=[];
-  passed=0; y=0; vy=0;
-  const finish = document.getElementById('finish');
-  const finishText = document.getElementById('finishText');
-  if(finish) finish.remove();
-  if(finishText) finishText.remove();
-  gojo.style.right='-200px'; gojo.style.opacity='0'; gojo.classList.add('hidden');
-  purple.classList.add('hidden'); purple.style.left=''; purple.style.bottom='';
-  clearInterval(blastInterval);
+  
+  // Reset Variables
+  obstacles.forEach(o=>o.remove());
+  obstacles=[];
+  passed=0; 
+  y=0; 
+  vy=0;
+  
+  // Remove finish line elements if they exist
+  const f = document.getElementById('finish');
+  if(f) f.remove();
+  const t = document.getElementById('finishText');
+  if(t) t.remove();
+
+  // Reset Gojo
+  gojo.style.right = '-300px';
+
   startGame();
 }
+
 </script>
 </body>
 </html>
