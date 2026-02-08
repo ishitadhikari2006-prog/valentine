@@ -233,7 +233,7 @@ function loop(){
   loopId = requestAnimationFrame(loop);
 }
 
-// --- JUMP LOGIC (Fixed for Mobile) ---
+// --- JUMP LOGIC FIXED FOR MOBILE ---
 // This listens to the whole window so taps work everywhere
 function jump(e) {
   if(!playing) return;
@@ -271,8 +271,11 @@ function gojoAttack(){
   gojo.classList.remove('hidden');
   
   // 1. SLIDE IN
-  // We manually set styles here to ensure animation works
-  gojo.style.transition = "right 1s ease-out";
+  // We manually set styles here to ensure animation works even without CSS class
+  gojo.style.transition = "right 1s ease-out, opacity 1s";
+  // Force browser to realize style changed
+  void gojo.offsetWidth; 
+  
   setTimeout(() => {
     gojo.style.right = "20px"; // Slide onto screen
     gojo.style.opacity = "1";
@@ -306,13 +309,13 @@ function triggerDeath(){
   clearInterval(gameInterval);
   cancelAnimationFrame(loopId);
   
-  // Check if deathScreen exists, if not create it (Prevents crashing)
+  // SAFETY CHECK: Create the YOU DIED screen if it's missing
   let ds = document.getElementById('deathScreen');
   if(!ds) {
       ds = document.createElement('div');
       ds.id = 'deathScreen';
       ds.innerText = 'YOU DIED';
-      // Style it dynamically to ensure it shows up
+      // Style it dynamically to ensure it shows up without CSS
       ds.style.position = 'absolute';
       ds.style.inset = '0';
       ds.style.background = 'black';
@@ -323,6 +326,7 @@ function triggerDeath(){
       ds.style.alignItems = 'center';
       ds.style.fontSize = '4rem';
       ds.style.fontWeight = 'bold';
+      ds.style.fontFamily = 'monospace';
       document.body.appendChild(ds);
   }
   
@@ -344,5 +348,48 @@ function lose(){
   end.classList.remove('hidden');
   
   // Reset Gojo/Purple positions for next time
-  gojo.style.right = "-
+  gojo.style.right = "-200px";
+  gojo.style.opacity = "0";
+  gojo.classList.add('hidden');
+  purple.classList.add('hidden');
+  
+  end.innerHTML = `
+    <h2>Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️</h2>
+    <br>
+    <div class="buttons">
+      <button onclick="win()" style="background:#ff5fa2; color:fff;">YES</button>
+      <button onclick="restartGame()" style="background:#444; color:fff;">RESTART</button>
+    </div>
+  `;
+}
+
+// Global functions for buttons
+window.win = function(){
+  start.classList.add('hidden');
+  gameScreen.classList.add('hidden');
+  end.classList.remove('hidden');
+  end.innerHTML = "<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
+}
+
+window.restartGame = function(){
+  end.classList.add('hidden');
+  gameScreen.classList.remove('hidden');
+
+  obstacles.forEach(o => o.remove());
+  obstacles = [];
+  passed = 0;
+  y = 0; vy = 0;
+  noCount = 14; 
+
+  const finishLine = document.getElementById('finish');
+  if(finishLine) finishLine.remove();
+  
+  const finishText = document.getElementById('finishText');
+  if(finishText) finishText.remove();
+
+  gojo.style.right = "-200px";
+  gojo.classList.add('hidden');
+  
+  startGame();
+}
          
