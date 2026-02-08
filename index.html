@@ -184,11 +184,32 @@ function lose(){
   playing=false;
   game.classList.add('hidden');
   end.classList.remove('hidden');
-  end.innerHTML=`<h2>Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️</h2><br><button onclick="win()">YES</button><button onclick="location.reload()">RESTART</button>`;
+  end.innerHTML=`<h2>Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️</h2><br><button onclick="win()">YES</button><button onclick="restartGame()">RESTART</button>`;
 }
 
 function win(){
   end.innerHTML="<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
+}
+
+function restartGame(){
+  // reset game state only
+  end.classList.add('hidden');
+  game.classList.remove('hidden');
+
+  obstacles.forEach(o=>o.remove());
+  obstacles=[];
+  passed=0;
+  y=0;vy=0;
+
+  const finish=document.getElementById('finish');
+  const finishText=document.getElementById('finishText');
+  if(finish)finish.remove();
+  if(finishText)finishText.remove();
+
+  document.getElementById('gojo').classList.add('hidden');
+  document.getElementById('purple').classList.add('hidden');
+
+  startGame();
 }
 </script></body>
 </html>
