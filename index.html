@@ -37,6 +37,7 @@
     right: -300px; /* Starts off-screen */  
     width: 140px;  
     z-index: 3;  
+    /* Smooth slide animation */  
     transition: right 1.5s cubic-bezier(0.25, 0.8, 0.25, 1);   
   }  
   
@@ -49,21 +50,24 @@
     filter: blur(4px);  
     box-shadow: 0 0 20px 10px rgba(128, 0, 128, 0.7);  
     z-index: 4;  
-    display: none;  
-  }  
+    display: none; /* Hidden until thrown */  
+  }
+
+  /* --- VIDEO CONTAINER --- */
+  #videoContainer {
+    background: #000;
+    z-index: 10;
+  }
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Keeps aspect ratio */
+  }
+  
 </style>  
 </head>  
 <body>  
-
-<!-- INTRO VIDEO SCREEN -->
-<div id="videoScreen" class="screen hidden">
-  <video id="introVideo" width="100%" autoplay>
-    <source src="intro.mp4" type="video/mp4">
-    Your browser does not support the video tag.
-  </video>
-</div>
-
-<!-- START SCREEN -->
+  
 <div id="start" class="screen">  
   <h2>Do you accept your bf is always right in every argument and you wanna be his Valentine 😼❤️</h2>  
   <div class="buttons">  
@@ -72,19 +76,28 @@
   </div>  
 </div>  
 
-<!-- GAME SCREEN -->
+<div id="videoContainer" class="screen hidden">
+    <video id="introVideo" playsinline>
+        <source src="intro.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+</div>
+  
 <div id="game" class="screen hidden">  
   <div id="title">RUN LITTLE MOUSE RUN</div>  
   <img id="jerry" src="jerry.png">  
   <div id="ground"></div>  
 </div>  
-
+  
 <img id="gojo" src="gojo.png">  
 <div id="purple"></div>  
+  
 <div id="end" class="screen hidden"></div>  
-
+  
 <script>  
 const start = document.getElementById('start');  
+const videoContainer = document.getElementById('videoContainer');
+const introVideo = document.getElementById('introVideo');
 const game = document.getElementById('game');  
 const end = document.getElementById('end');  
 const yesBtn = document.getElementById('yesBtn');  
@@ -92,47 +105,58 @@ const noBtn = document.getElementById('noBtn');
 const jerry = document.getElementById('jerry');  
 const gojo = document.getElementById('gojo');  
 const purple = document.getElementById('purple');  
-const videoScreen = document.getElementById('videoScreen');  
-const introVideo = document.getElementById('introVideo');  
-
+  
 let noCount=0, y=0, vy=0, obstacles=[], passed=0, playing=false;  
 let gameInterval, loopId, purpleInterval;  
-
-// --- YES BUTTON ---  
+  
+// --- INITIAL YES BUTTON ---  
 yesBtn.onclick = () => {  
   start.classList.add('hidden');  
   end.classList.remove('hidden');  
   end.innerHTML="<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";  
 };  
-
-// --- NO BUTTON ---  
+  
+// --- INITIAL NO BUTTON ---  
 noBtn.onclick = () => {  
-  noCount++;    
+  noCount++;  
+  // Scale buttons
   noBtn.style.transform = `scale(${Math.max(0.2,1-noCount*0.06)})`;  
   yesBtn.style.transform = `scale(${1+noCount*0.08})`;  
-
-  if(noCount===14){  
-    // Hide start, show video
+  
+  // TRIGGER VIDEO AFTER 14 CLICKS
+  if(noCount>=14){  
+    
+    // 1. Hide Start Screen
     start.classList.add('hidden');  
-    videoScreen.classList.remove('hidden');  
-    introVideo.play();  
-
-    // When video ends -> start game
-    introVideo.onended = () => {  
-      videoScreen.classList.add('hidden');  
-      game.classList.remove('hidden');  
-      startGame();  
-    };  
+    
+    // 2. Show Video Screen
+    videoContainer.classList.remove('hidden');
+    
+    // 3. Play Video (Sound will work because user just clicked a button)
+    introVideo.play().catch(error => {
+        console.log("Video play failed:", error);
+        // Fallback: if video fails, skip straight to game
+        videoContainer.classList.add('hidden');
+        game.classList.remove('hidden');
+        startGame();
+    });
+    
+    // 4. When Video Ends -> Start Game
+    introVideo.onended = () => {
+        videoContainer.classList.add('hidden');
+        game.classList.remove('hidden');
+        startGame();
+    };
   }  
 };  
-
+  
 // --- GAME LOGIC ---  
 function startGame(){  
   playing=true;  
   gameInterval=setInterval(spawnObstacle,1500);   
   loopId=requestAnimationFrame(loop);  
 }  
-
+  
 function spawnObstacle(){  
   if(!playing) return;  
   const o = document.createElement('div');  
@@ -141,69 +165,83 @@ function spawnObstacle(){
   game.appendChild(o);  
   obstacles.push(o);  
 }  
-
+  
 function loop(){  
   if(!playing) return;  
+    
+  // Gravity  
   vy -= 0.6;  
   y += vy;  
   if(y<0){y=0; vy=0;}  
   jerry.style.bottom = 80+y+'px';  
-
+  
+  // Obstacles  
   obstacles.forEach((o,i)=>{  
     let currentLeft = o.offsetLeft;  
     o.style.left = (currentLeft-5)+'px';  
-
+  
+    // Collision (Loss)  
     if(currentLeft < 90 && currentLeft > 40 && y<50){  
         showFinalOptions();  
     }  
-
+  
+    // Passed Obstacle  
     if(currentLeft<-30){  
         o.remove();   
         obstacles.splice(i,1);   
         passed++;   
+        // WIN CONDITION  
         if(passed===14) finish();  
     }  
   });  
-
+  
   loopId=requestAnimationFrame(loop);  
 }  
-
-game.onclick = ()=>{if(playing && y===0) vy=6;}; // Jump height same as last code  
-
+  
+// Jump (Reduced height to 6)  
+game.onclick = ()=>{if(playing && y===0) vy=6;};  
+  
 // --- FINISH SEQUENCE ---  
 function finish(){  
   playing=false;  
   clearInterval(gameInterval);  
   cancelAnimationFrame(loopId);  
-
+  
+  // 1. Create Wall  
   const f = document.createElement('div');  
   f.id = 'finish';  
   game.appendChild(f);  
-
+    
   const t = document.createElement('div');  
   t.id = 'finishText';  
   t.innerText="No I don't";  
   game.appendChild(t);  
-
+  
+  // 2. TRIGGER GOJO IMMEDIATELY (No Delay)  
   slideGojoIn();  
 }  
-
+  
 function slideGojoIn(){  
-  gojo.style.right = '50px';  
+  gojo.style.right = '50px'; // Slides in via CSS transition  
+    
+  // 3. Wait 1.5s for him to arrive and stand there, then Attack  
   setTimeout(throwHollowPurple, 1500);  
 }  
-
+  
 function throwHollowPurple(){  
   purple.style.display = 'block';  
+  // Position orb relative to Gojo  
   let startX = window.innerWidth - 150;   
   let currentX = startX;  
   purple.style.left = currentX + 'px';  
   purple.style.bottom = '140px';   
-
+  
+  // Animate Orb  
   purpleInterval = setInterval(() => {  
     currentX -= 15;   
     purple.style.left = currentX + 'px';  
-
+  
+    // Hit Jerry  
     if(currentX < 80){  
       clearInterval(purpleInterval);  
       purple.style.display = 'none';   
@@ -211,17 +249,18 @@ function throwHollowPurple(){
     }  
   }, 16);  
 }  
-
+  
+// --- FINAL OPTIONS ---  
 function showFinalOptions(){  
   playing=false;  
   clearInterval(gameInterval);  
   clearInterval(purpleInterval);  
   if(loopId) cancelAnimationFrame(loopId);  
-
+  
   game.classList.add('hidden');  
   gojo.style.right = '-300px';   
   purple.style.display = 'none';  
-
+  
   end.classList.remove('hidden');  
   end.innerHTML = `<h2>Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️</h2>  
   <div class="buttons">  
@@ -229,25 +268,26 @@ function showFinalOptions(){
     <button onclick="restartGame()" style="background:#444;color:#fff;">RESTART</button>  
   </div>`;  
 }  
-
+  
+// Global functions for HTML buttons  
 window.finalYes = function(){  
-  end.innerHTML="<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";  
+    end.innerHTML="<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";  
 }  
-
+  
 window.restartGame = function(){  
   end.classList.add('hidden');  
   game.classList.remove('hidden');  
-
+    
   obstacles.forEach(o=>o.remove()); obstacles=[];  
   passed=0; y=0; vy=0;  
-
+    
   const finishEl = document.getElementById('finish');  
   if(finishEl) finishEl.remove();  
   const finishText = document.getElementById('finishText');  
   if(finishText) finishText.remove();  
-
+    
   gojo.style.right='-300px';   
-
+    
   startGame();  
 }  
 </script>  
