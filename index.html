@@ -79,10 +79,11 @@
   }
   #gojo {
     position: absolute;
-    right: -200px; /* Hidden offscreen initially */
+    right: -200px;
     bottom: 130px;
     width: 140px;
     opacity: 0;
+    /* Smooth slide animation */
     transition: right 1.2s ease, opacity 0.5s ease;
     z-index: 6;
   }
@@ -95,14 +96,14 @@
     filter: blur(6px);
     z-index: 7;
   }
-  
-  /* --- CRITICAL ADDITION: Styles for the Death Screen --- */
+
+  /* --- STYLE FOR THE DEATH MESSAGE --- */
   #deathScreen {
     position: absolute;
     inset: 0;
     background: black;
     color: red;
-    z-index: 999; /* Must be on top of everything */
+    z-index: 999; /* Highest priority */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -145,7 +146,7 @@ const noBtn = document.getElementById('noBtn');
 const jerry = document.getElementById('jerry');
 const gojo = document.getElementById('gojo');
 const purple = document.getElementById('purple');
-const deathScreen = document.getElementById('deathScreen'); // Fix: Get the death screen
+const deathScreen = document.getElementById('deathScreen');
 
 let noCount = 0;
 let y = 0, vy = 0;
@@ -156,13 +157,11 @@ let gameInterval;
 let loopId;
 let blastInterval;
 
-// Yes Button Logic
 yesBtn.onclick = (e) => {
   e.stopPropagation();
   win();
 };
 
-// No Button Logic
 noBtn.onclick = (e) => {
   e.stopPropagation();
   noCount++;
@@ -188,5 +187,162 @@ function spawnObstacle(){
   o.className = 'obstacle';
   o.style.left = '100%';
   gameScreen.appendChild(o);
-  obstacles.push(o
-                 
+  obstacles.push(o);
+}
+
+function loop(){
+  if(!playing) return;
+  
+  // Gravity logic
+  vy -= 0.6;
+  y += vy;
+  if(y < 0) { y = 0; vy = 0; }
+  jerry.style.bottom = (80 + y) + 'px';
+
+  obstacles.forEach((o, i) => {
+    o.style.left = (o.offsetLeft - 5) + 'px';
+    
+    // Collision Detection -> Triggers Death
+    if(o.offsetLeft < 90 && o.offsetLeft > 40 && y < 50){
+      triggerDeath();
+    }
+    
+    // Remove obstacle if off screen
+    if(o.offsetLeft < -30){
+      o.remove();
+      obstacles.splice(i, 1);
+      passed++;
+      if(passed === 14) finish();
+    }
+  });
+  
+  loopId = requestAnimationFrame(loop);
+}
+
+// Touch/Click Logic
+function jump(e) {
+    if(e && e.cancelable) e.preventDefault();
+    if(playing && y === 0) vy = 14; 
+}
+gameScreen.addEventListener('mousedown', jump);
+gameScreen.addEventListener('touchstart', jump, {passive: false});
+
+function finish(){
+  playing = false;
+  clearInterval(gameInterval);
+  cancelAnimationFrame(loopId);
+
+  const f = document.createElement('div');
+  f.id = 'finish';
+  gameScreen.appendChild(f);
+  
+  const t = document.createElement('div');
+  t.id = 'finishText';
+  t.innerText = "No I don't";
+  gameScreen.appendChild(t);
+  
+  // Start Gojo sequence
+  setTimeout(gojoAttack, 500);
+}
+
+function gojoAttack(){
+  gojo.classList.remove('hidden');
+  
+  // 1. SLIDE IN
+  // Small delay to ensure CSS transition works
+  setTimeout(() => {
+    gojo.style.opacity = '1';
+    gojo.style.right = '20px';
+  }, 50);
+
+  // 2. WAIT, THEN THROW PURPLE
+  setTimeout(() => {
+      purple.classList.remove('hidden');
+      let x = window.innerWidth - 200;
+      purple.style.bottom = '150px';
+      purple.style.left = x + 'px'; 
+
+      blastInterval = setInterval(() => {
+        x -= 15;
+        purple.style.left = x + 'px';
+        
+        if(x < 80){ // Impact with Jerry
+          clearInterval(blastInterval);
+          triggerDeath(); 
+        }
+      }, 16);
+  }, 1500); 
+}
+
+// NEW FUNCTION: HANDLES DEATH
+function triggerDeath(){
+  playing = false;
+  clearInterval(gameInterval);
+  cancelAnimationFrame(loopId);
+  if(blastInterval) clearInterval(blastInterval);
+
+  // Show "YOU DIED"
+  if(deathScreen) {
+      deathScreen.classList.remove('hidden');
+  }
+
+  // Wait 2 seconds, then show Lose Screen
+  setTimeout(() => {
+    if(deathScreen) deathScreen.classList.add('hidden');
+    lose();
+  }, 2000);
+}
+
+function lose(){
+  playing = false;
+  
+  gameScreen.classList.add('hidden');
+  end.classList.remove('hidden');
+  
+  // Reset Elements
+  gojo.classList.add('hidden');
+  gojo.style.right = '-200px'; 
+  gojo.style.opacity = '0';
+  purple.classList.add('hidden');
+  
+  end.innerHTML = `
+    <h2>Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️</h2>
+    <br>
+    <div class="buttons">
+      <button onclick="win()" style="background:#ff5fa2; color:fff;">YES</button>
+      <button onclick="restartGame()" style="background:#444; color:fff;">RESTART</button>
+    </div>
+  `;
+}
+
+window.win = function(){
+  start.classList.add('hidden');
+  gameScreen.classList.add('hidden');
+  end.classList.remove('hidden');
+  end.innerHTML = "<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
+}
+
+window.restartGame = function(){
+  end.classList.add('hidden');
+  gameScreen.classList.remove('hidden');
+
+  obstacles.forEach(o => o.remove());
+  obstacles = [];
+  passed = 0;
+  y = 0; vy = 0;
+  noCount = 14; 
+
+  const finishLine = document.getElementById('finish');
+  if(finishLine) finishLine.remove();
+  
+  const finishText = document.getElementById('finishText');
+  if(finishText) finishText.remove();
+
+  gojo.style.right = '-200px';
+  gojo.style.opacity = '0';
+  
+  startGame();
+}
+</script>
+</body>
+</html>
