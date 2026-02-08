@@ -2,182 +2,155 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Run Little Mouse Run 🐭</title>
+<title>Nandini 💖 Valentine</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-html,body{
-  margin:0;
-  padding:0;
-  overflow:hidden;
-  background:#12001f;
-  font-family:Arial, sans-serif;
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:radial-gradient(circle,#2b004f,#050014);
   color:white;
+  font-family:Segoe UI,sans-serif;
+  overflow:hidden;
+  text-align:center;
 }
 
-/* SCREENS */
+/* ---------- SCREENS ---------- */
 .screen{
-  position:fixed;
-  inset:0;
+  position:absolute;
+  width:100%;
+  height:100%;
   display:flex;
+  flex-direction:column;
   align-items:center;
   justify-content:center;
-  flex-direction:column;
-  background:radial-gradient(circle,#2b0040,#000);
-  z-index:10;
 }
+.hidden{display:none}
 
-.hidden{display:none;}
+/* ---------- VALENTINE ---------- */
+h1{font-size:2rem;margin-bottom:30px}
+.buttons{display:flex;gap:20px}
 
-h1{
-  text-align:center;
-  font-size:28px;
-  margin-bottom:20px;
-}
-
-/* BUTTONS */
-.btn{
-  padding:14px 26px;
-  margin:10px;
-  font-size:20px;
+button{
+  padding:15px 30px;
+  font-size:1.2rem;
   border:none;
   border-radius:12px;
   cursor:pointer;
 }
 
-#yesBtn{background:#ff4da6;color:white;}
-#noBtn{background:#555;color:white;}
+#yes{background:#ff4da6}
+#no{background:#555}
 
-/* GAME */
+/* ---------- GAME ---------- */
 #game{
-  position:relative;
-  width:100vw;
-  height:100vh;
-  overflow:hidden;
+  justify-content:flex-start;
+}
+#title{
+  margin-top:10px;
+  font-size:1.4rem;
 }
 
 #ground{
   position:absolute;
-  bottom:0;
+  bottom:40px;
   width:100%;
-  height:80px;
-  background:#222;
+  height:4px;
+  background:#999;
 }
 
 #jerry{
   position:absolute;
-  bottom:80px;
+  bottom:40px;
   left:40px;
-  width:70px;
+  width:60px;
 }
 
 .obstacle{
   position:absolute;
-  bottom:80px;
+  bottom:40px;
   width:40px;
   height:60px;
   background:red;
 }
 
-#gojo{
-  position:absolute;
-  right:-200px;
-  top:20%;
-  width:180px;
-}
-
-#purple{
-  position:absolute;
-  width:120px;
-  height:120px;
-  border-radius:50%;
-  background:radial-gradient(circle,#fff,#a020f0);
-  box-shadow:0 0 40px #a020f0;
-  display:none;
+/* ---------- END ---------- */
+#end{
+  font-size:1.5rem;
 }
 </style>
 </head>
 
 <body>
 
-<!-- VALENTINE SCREEN -->
+<!-- VALENTINE -->
 <div id="valentine" class="screen">
-  <h1>Will you be my Valentine? 💖</h1>
-  <button id="yesBtn" class="btn">YES 😚</button>
-  <button id="noBtn" class="btn">NO 😶</button>
+  <h1>Nandini 💖 Will you be my Valentine?</h1>
+  <div class="buttons">
+    <button id="yes">YES 😍</button>
+    <button id="no">NO 🙄</button>
+  </div>
 </div>
 
 <!-- GAME -->
-<div id="game" class="hidden">
-  <h1 style="position:absolute;top:10px;width:100%;text-align:center;">
-    RUN LITTLE MOUSE RUN 🐭
-  </h1>
-
+<div id="game" class="screen hidden">
+  <div id="title">RUN LITTLE MOUSE RUN 🐭</div>
   <img id="jerry" src="jerry.png">
   <div id="ground"></div>
 </div>
 
-<!-- GAME OVER -->
-<div id="gameOver" class="screen hidden">
-  <h1>Game Over 💀</h1>
-  <button class="btn" onclick="location.reload()">Restart</button>
-</div>
-
-<!-- WIN -->
-<div id="win" class="screen hidden">
-  <h1>You survived…</h1>
-  <img id="gojo" src="gojo.png">
-  <div id="purple"></div>
+<!-- END -->
+<div id="end" class="screen hidden">
+  <h1 id="endText"></h1>
+  <button onclick="location.reload()">Restart</button>
 </div>
 
 <script>
+/* ---------- VALENTINE LOGIC ---------- */
+let noClicks=0;
+const yes=document.getElementById("yes");
+const no=document.getElementById("no");
 const valentine=document.getElementById("valentine");
-const yes=document.getElementById("yesBtn");
-const no=document.getElementById("noBtn");
 const game=document.getElementById("game");
-const jerry=document.getElementById("jerry");
-const over=document.getElementById("gameOver");
-const win=document.getElementById("win");
-const purple=document.getElementById("purple");
-
-let scale=1;
-let y=80,vy=0;
-let gravity=0.6;
-let jumping=false;
-let obstacles=[];
-let passed=0;
-let playing=false;
 
 no.onclick=()=>{
-  scale-=0.1;
-  no.style.transform=`scale(${scale})`;
-  yes.style.transform=`scale(${2-scale})`;
+  noClicks++;
+  no.style.transform=`scale(${1-noClicks*0.05})`;
+  yes.style.transform=`scale(${1+noClicks*0.08})`;
+
+  if(noClicks>=15){
+    valentine.classList.add("hidden");
+    game.classList.remove("hidden");
+    startGame();
+  }
 };
 
-yes.onclick=()=>{
-  valentine.classList.add("hidden");
-  game.classList.remove("hidden");
-  playing=true;
-  spawnObstacle();
-};
+/* ---------- GAME LOGIC ---------- */
+const jerry=document.getElementById("jerry");
+let y=0,vy=0,gravity=0.6;
+let obstacles=[];
+let passed=0;
+let playing=true;
+
+document.body.addEventListener("touchstart",jump);
+document.body.addEventListener("click",jump);
 
 function jump(){
-  if(!jumping){
-    vy=12;
-    jumping=true;
-  }
+  if(y===0)vy=12;
 }
-document.addEventListener("touchstart",jump);
-document.addEventListener("click",jump);
+
+function startGame(){
+  setInterval(spawnObstacle,1800);
+  requestAnimationFrame(loop);
+}
 
 function spawnObstacle(){
   if(!playing)return;
-  const obs=document.createElement("div");
-  obs.className="obstacle";
-  obs.style.right="-40px";
-  game.appendChild(obs);
-  obstacles.push(obs);
-  setTimeout(spawnObstacle,1800);
+  const o=document.createElement("div");
+  o.className="obstacle";
+  o.style.left="100%";
+  game.appendChild(o);
+  obstacles.push(o);
 }
 
 function loop(){
@@ -185,47 +158,37 @@ function loop(){
 
   vy-=gravity;
   y+=vy;
-  if(y<=80){y=80;jumping=false;}
-  jerry.style.bottom=y+"px";
+  if(y<0){y=0;vy=0}
+  jerry.style.bottom=40+y+"px";
 
   obstacles.forEach((o,i)=>{
-    o.style.right=(parseInt(o.style.right)+6)+"px";
+    let x=o.offsetLeft-5;
+    o.style.left=x+"px";
 
-    const j=jerry.getBoundingClientRect();
-    const b=o.getBoundingClientRect();
-
-    if(j.right>b.left && j.left<b.right && j.bottom>b.top){
-      playing=false;
-      game.classList.add("hidden");
-      over.classList.remove("hidden");
+    if(x<100 && x>40 && y<50){
+      endGame(false);
     }
 
-    if(parseInt(o.style.right)>window.innerWidth){
+    if(x<-50){
       o.remove();
       obstacles.splice(i,1);
       passed++;
-      if(passed>=14){
-        playing=false;
-        game.classList.add("hidden");
-        win.classList.remove("hidden");
-        attack();
-      }
+      if(passed===14)endGame(true);
     }
   });
 
   requestAnimationFrame(loop);
 }
-loop();
 
-function attack(){
-  purple.style.display="block";
-  let x=window.innerWidth/2,y=window.innerHeight/2;
-  let dx=-8;
-  setInterval(()=>{
-    x+=dx;
-    purple.style.left=x+"px";
-    purple.style.top=y+"px";
-  },16);
+function endGame(win){
+  playing=false;
+  game.classList.add("hidden");
+  document.getElementById("end").classList.remove("hidden");
+
+  document.getElementById("endText").innerHTML=
+    win
+    ? "💥 Gojo used Hollow Purple 💜<br>You ARE my Valentine 😼🎉"
+    : "Jerry lost 😭<br>Try again!";
 }
 </script>
 
