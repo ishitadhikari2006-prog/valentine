@@ -2,225 +2,76 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RUN LITTLE MOUSE RUN 🐭</title>
+<title>Valentine Game 💖</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{
-  background: radial-gradient(circle at top, #12002b, #000);
-  overflow:hidden;
-  font-family:'Segoe UI',sans-serif;
-  color:white;
-  touch-action: manipulation;
-}
-#title{
-  position:fixed;
-  top:10px;
-  width:100%;
-  text-align:center;
-  font-size:26px;
-  letter-spacing:2px;
-}
-#game{
-  position:relative;
-  width:100vw;
-  height:100vh;
-}
-#ground{
-  position:absolute;
-  bottom:80px;
-  width:100%;
-  height:4px;
-  background:#888;
-}
-#mouse{
-  position:absolute;
-  bottom:84px;
-  left:80px;
-  width:70px;
-  transition:transform .15s;
-}
-.obstacle{
-  position:absolute;
-  bottom:84px;
-  width:32px; /* reduced width */
-  height:45px;
-  background:#ff2e2e;
-  border-radius:6px;
-}
-#overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.85);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  flex-direction:column;
-  text-align:center;
-}
-#overlay h1{margin-bottom:20px}
-#overlay button{
-  padding:12px 30px;
-  font-size:18px;
-  border:none;
-  border-radius:25px;
-  background:#ff4da6;
-  color:white;
-}
-#gojo{
-  position:fixed;
-  right:-400px;
-  bottom:120px;
-  width:300px;
-  display:none;
-}
-#purple{
-  position:fixed;
-  width:120px;
-  height:120px;
-  border-radius:50%;
-  background:radial-gradient(circle,#fff,#b000ff,#400060);
-  box-shadow:0 0 40px #b000ff;
-  display:none;
-}
+body{font-family:Poppins,Arial,sans-serif;background:#0b001a;color:#fff;overflow:hidden}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+button{padding:14px 32px;font-size:20px;border:none;border-radius:30px;margin:10px;cursor:pointer}
+#yesBtn{background:#ff4da6;color:#fff}
+#noBtn{background:#444;color:#fff}
+#game{display:none;position:fixed;inset:0}
+#title{position:fixed;top:10px;width:100%;text-align:center;font-size:22px;letter-spacing:2px}
+#ground{position:absolute;bottom:90px;width:100%;height:4px;background:#aaa}
+#mouse{position:absolute;bottom:94px;left:70px;width:64px}
+.obstacle{position:absolute;bottom:94px;width:28px;height:44px;background:#ff3333;border-radius:6px}
+#overlay{display:none;background:rgba(0,0,0,.85)}
+#gojo{position:fixed;right:-300px;bottom:120px;width:260px;display:none}
+#purple{position:fixed;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,#fff,#b000ff,#400060);box-shadow:0 0 40px #b000ff;display:none}
 </style>
 </head>
-<body>
-<div id="title">RUN LITTLE MOUSE RUN 🐭</div>
-<div id="game">
+<body><!-- START SCREEN --><div id="start" class="screen">
+  <h1>Will you be my Valentine,<br>Nandini? 💖</h1>
+  <div>
+    <button id="yesBtn">YES 😍</button>
+    <button id="noBtn">NO 😒</button>
+  </div>
+</div><!-- GAME --><div id="game">
+  <div id="title">RUN LITTLE MOUSE RUN 🐭</div>
   <div id="ground"></div>
   <img id="mouse" src="jerry.png">
 </div><img id="gojo" src="gojo.png">
-<div id="purple"></div><div id="overlay">
+<div id="purple"></div><!-- END OVERLAY --><div id="overlay" class="screen">
   <h1 id="endText"></h1>
-  <div id="valentine" style="display:none;flex-direction:column;gap:20px">
-    <h2>Will you be my Valentine, Nandini? 💖</h2>
-    <div style="display:flex;gap:20px;justify-content:center">
-      <button id="yesBtn">YES 😍</button>
-      <button id="noBtn">NO 😒</button>
-    </div>
-  </div>
-  <button id="restartBtn" onclick="restartGame()">Restart Game</button>
+  <button onclick="restart()">Restart Game</button>
 </div><script>
-const mouse=document.getElementById('mouse');
+// START YES/NO LOGIC
+let yesScale=1,noScale=1;
+const yesBtn=document.getElementById('yesBtn');
+const noBtn=document.getElementById('noBtn');
+const start=document.getElementById('start');
 const game=document.getElementById('game');
+
+yesBtn.onclick=()=>{start.style.display='none';game.style.display='block';startGame()};
+noBtn.onclick=()=>{
+  yesScale+=0.2; noScale-=0.12;
+  yesBtn.style.transform=`scale(${yesScale})`;
+  noBtn.style.transform=`scale(${Math.max(noScale,.4)})`;
+};
+
+// GAME LOGIC
+const mouse=document.getElementById('mouse');
 const overlay=document.getElementById('overlay');
 const endText=document.getElementById('endText');
 const gojo=document.getElementById('gojo');
 const purple=document.getElementById('purple');
 
-let jumping=false;
-let obstacles=[];
-let count=0;
-let gameOver=false;
+let jumping=false,gameOver=false,count=0;
 
-function jump(){
-  if(jumping||gameOver)return;
-  jumping=true;
-  mouse.style.transform='translateY(-120px)';
-  setTimeout(()=>{
-    mouse.style.transform='translateY(0)';
-    jumping=false;
-  },450);
-}
+function jump(){if(jumping||gameOver)return;jumping=true;mouse.style.transform='translateY(-120px)';setTimeout(()=>{mouse.style.transform='translateY(0)';jumping=false},420)}
+document.addEventListener('touchstart',jump);
+document.addEventListener('click',jump);
 
-document.body.addEventListener('touchstart',jump);
-document.body.addEventListener('click',jump);
+function startGame(){count=0;gameOver=false;setInterval(createObstacle,1600)}
 
-function createObstacle(){
-  if(gameOver)return;
-  const obs=document.createElement('div');
-  obs.className='obstacle';
-  obs.style.left='100%';
-  game.appendChild(obs);
-  obstacles.push(obs);
-  let pos=window.innerWidth;
+function createObstacle(){if(gameOver)return;const o=document.createElement('div');o.className='obstacle';o.style.left='100%';game.appendChild(o);let x=innerWidth;const move=setInterval(()=>{if(gameOver){clearInterval(move);return}x-=6;o.style.left=x+'px';const m=mouse.getBoundingClientRect();const r=o.getBoundingClientRect();if(!(m.top>r.bottom||m.bottom<r.top||m.right<r.left||m.left>r.right)){fail()}if(x<-60){clearInterval(move);o.remove();count++;if(count===14)win()}},20)}
 
-  const move=setInterval(()=>{
-    if(gameOver){clearInterval(move);return;}
-    pos-=6;
-    obs.style.left=pos+'px';
+function fail(){gameOver=true;overlay.style.display='flex';endText.innerText='So… do you agree your boyfriend is always right and want to be his Valentine? 😼'}
 
-    const mRect=mouse.getBoundingClientRect();
-    const oRect=obs.getBoundingClientRect();
-    if(!(mRect.top>oRect.bottom||mRect.bottom<oRect.top||mRect.right<oRect.left||mRect.left>oRect.right)){
-      endFail();
-    }
+function win(){gameOver=true;gojo.style.display='block';let p=-300;const s=setInterval(()=>{p+=10;gojo.style.right=p+'px';if(p>20){clearInterval(s);shoot()}},30)}
 
-    if(pos<-60){
-      clearInterval(move);
-      obs.remove();
-      count++;
-      if(count===14)endWin();
-    }
-  },20);
-}
+function shoot(){purple.style.display='block';let x=innerWidth-200,y=200;const b=setInterval(()=>{x-=18;y+=6;purple.style.left=x+'px';purple.style.top=y+'px';if(x<80){clearInterval(b);fail()}},30)}
 
-function endFail(){
-  gameOver=true;
-  overlay.style.display='flex';
-  document.getElementById('restartBtn').style.display='block';
-  document.getElementById('valentine').style.display='none';
-  endText.innerText='So… do you agree your boyfriend is always right in arguments? 😼';
-}
-
-function endWin(){
-  gameOver=true;
-  gojo.style.display='block';
-  let gx=-400;
-  const slide=setInterval(()=>{
-    gx+=10;
-    gojo.style.right=gx+'px';
-    if(gx>20){clearInterval(slide);shoot();}
-  },30);
-}
-  },30);
-}
-
-function shoot(){
-  purple.style.display='block';
-  let x=window.innerWidth-200;
-  let y=200;
-  const blast=setInterval(()=>{
-    x-=18; y+=6;
-    purple.style.left=x+'px';
-    purple.style.top=y+'px';
-    if(x<100){
-      clearInterval(blast);
-      showValentine();
-    }
-  },30);
-}
-  },30);
-}
-
-function restartGame(){
-  location.reload();
-}
-
-const yesBtn=document.getElementById('yesBtn');
-const noBtn=document.getElementById('noBtn');
-let yesScale=1;
-let noScale=1;
-
-function showValentine(){
-  overlay.style.display='flex';
-  endText.innerText='';
-  document.getElementById('restartBtn').style.display='none';
-  const v=document.getElementById('valentine');
-  v.style.display='flex';
-}
-
-yesBtn.onclick=()=>{
-  document.body.innerHTML='<h1 style="color:white;text-align:center;margin-top:40vh">🎉 Congratulations Nandini 🎉<br>You are officially Mr Ishit’s Valentine 😼💖🎈</h1>';
-};
-
-noBtn.onclick=()=>{
-  yesScale+=0.15;
-  noScale-=0.1;
-  yesBtn.style.transform=`scale(${yesScale})`;
-  noBtn.style.transform=`scale(${Math.max(noScale,0.4)})`;
-};
-
-setInterval(createObstacle,1600);
+function restart(){location.reload()}
 </script></body>
 </html>
