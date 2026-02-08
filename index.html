@@ -11,7 +11,8 @@
     background: #ffffff;
     color: #000000;
     overflow: hidden;
-    touch-action: manipulation;
+    touch-action: none; /* Disables browser zooming/scrolling for better game control */
+    user-select: none; /* Prevents highlighting text while tapping */
   }
   .screen {
     z-index: 1;
@@ -109,7 +110,7 @@
     pointer-events: none;
   }
 
-  /* --- NEW YOU DIED SCREEN STYLES --- */
+  /* --- YOU DIED SCREEN STYLES --- */
   #deathScreen {
     position: absolute;
     inset: 0;
@@ -168,7 +169,10 @@ let playing = false;
 let gameInterval, loopId, blastInterval;
 
 // Yes Button
-yesBtn.onclick = () => win();
+yesBtn.onclick = (e) => {
+  e.stopPropagation();
+  win();
+};
 
 // No Button
 noBtn.onclick = (e) => {
@@ -184,13 +188,25 @@ noBtn.onclick = (e) => {
   }
 };
 
-// Jump Logic
+// --- FIXED JUMP LOGIC (Attached to Window for better Mobile response) ---
 function jump(e) {
-    if(e && e.cancelable) e.preventDefault();
-    if(playing && y < 5) vy = 15; 
+    if(!playing) return;
+    
+    // Prevent default touch behaviors (like scrolling)
+    if(e.type === 'touchstart' && e.cancelable) {
+       e.preventDefault(); 
+    }
+    
+    // Jump if close to ground
+    if(y < 10) vy = 15; 
 }
-gameScreen.addEventListener('click', jump);
-gameScreen.addEventListener('touchstart', jump, {passive: false});
+
+// Attach listener to the entire window so you can tap ANYWHERE
+window.addEventListener('touchstart', jump, {passive: false});
+window.addEventListener('mousedown', jump);
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' || e.code === 'ArrowUp') jump(e);
+});
 
 function startGame(){
   playing = true;
@@ -225,7 +241,7 @@ function loop(){
     
     // Collision with Obstacle
     if(o.offsetLeft < 90 && o.offsetLeft > 40 && y < 55){
-      triggerDeath(); // Changed to trigger death sequence
+      triggerDeath(); 
     }
     
     // Pass count
@@ -282,13 +298,14 @@ function firePurple(){
             clearInterval(blastInterval);
             jerry.classList.add('hidden');
             purple.classList.add('hidden');
-            // Trigger death sequence on hit
+            
+            // Trigger Death
             triggerDeath();
         }
     }, 16);
 }
 
-// NEW FUNCTION: Handle the YOU DIED sequence
+// YOU DIED sequence
 function triggerDeath(){
   playing = false;
   clearInterval(gameInterval);
@@ -306,7 +323,7 @@ function triggerDeath(){
 }
 
 function showLoseScreen(){
-  // Ensure game loop is stopped (double check)
+  // Force stop any lingering loops
   playing = false;
   clearInterval(gameInterval);
   cancelAnimationFrame(loopId);
