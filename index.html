@@ -73,6 +73,8 @@ button{
   right:-200px;
   bottom:130px;
   width:140px;
+  opacity:0;
+  transition: right 0.8s ease, opacity 0.8s ease;
 }
 #purple{
   position:absolute;
@@ -171,12 +173,26 @@ function finish(){
 function gojoAttack(){
   const gojo=document.getElementById('gojo');
   const purple=document.getElementById('purple');
+
   gojo.classList.remove('hidden');
   purple.classList.remove('hidden');
+
+  // force Gojo visible on screen
+  gojo.style.opacity='1';
+  gojo.style.right='20px';
+
   let x=window.innerWidth-200;
+  purple.style.bottom='150px';
+
   const blast=setInterval(()=>{
-    x-=15;purple.style.left=x+'px';purple.style.bottom='150px';
-    if(x<80){clearInterval(blast);lose()}
+    x-=15;
+    purple.style.left=x+'px';
+    if(x<80){
+      clearInterval(blast);
+      lose();
+    }
+  },16);
+}
   },16);
 }
 
