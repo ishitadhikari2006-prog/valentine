@@ -108,6 +108,22 @@
     opacity: 0;   
     pointer-events: none;
   }
+
+  /* --- NEW DEATH MESSAGE STYLE --- */
+  #deathMsg {
+    position: absolute;
+    inset: 0;
+    background: black;
+    color: red;
+    display: none; /* Hidden by default */
+    justify-content: center;
+    align-items: center;
+    font-size: 4rem;
+    font-weight: bold;
+    z-index: 9999; /* Highest priority */
+    text-shadow: 0 0 20px darkred;
+    font-family: 'Courier New', Courier, monospace;
+  }
 </style>
 </head>
 <body>
@@ -129,6 +145,8 @@
 <img id="gojo" src="gojo.png" alt="Gojo">
 <div id="purple"></div>
 
+<div id="deathMsg">YOU DIED</div>
+
 <div id="end" class="screen hidden" style="z-index:15"></div>
 
 <script>
@@ -140,6 +158,7 @@ const noBtn = document.getElementById('noBtn');
 const jerry = document.getElementById('jerry');
 const gojo = document.getElementById('gojo');
 const purple = document.getElementById('purple');
+const deathMsg = document.getElementById('deathMsg'); // Get death msg element
 
 let noCount = 0;
 let y = 0, vy = 0;
@@ -204,9 +223,9 @@ function loop(){
   obstacles.forEach((o, i) => {
     o.style.left = (o.offsetLeft - 6) + 'px';
     
-    // Collision
+    // Collision with WALL
     if(o.offsetLeft < 90 && o.offsetLeft > 40 && y < 55){
-      showLoseScreen(); 
+      triggerDeath(); // Calls the death screen
     }
     
     // Pass count
@@ -263,17 +282,30 @@ function firePurple(){
             clearInterval(blastInterval);
             jerry.classList.add('hidden');
             purple.classList.add('hidden');
-            setTimeout(showLoseScreen, 500);
+            
+            triggerDeath(); // Calls the death screen
         }
     }, 16);
 }
 
-function showLoseScreen(){
+// --- NEW FUNCTION: TRIGGERS DEATH SCREEN ---
+function triggerDeath(){
   playing = false;
   clearInterval(gameInterval);
   cancelAnimationFrame(loopId);
   if(blastInterval) clearInterval(blastInterval);
 
+  // Show "YOU DIED"
+  deathMsg.style.display = 'flex';
+
+  // Wait 2 seconds, then show the final options
+  setTimeout(() => {
+    deathMsg.style.display = 'none';
+    showLoseScreen();
+  }, 2000);
+}
+
+function showLoseScreen(){
   gameScreen.classList.add('hidden');
   end.classList.remove('hidden');
   
