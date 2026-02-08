@@ -156,7 +156,7 @@ function loop(){
   requestAnimationFrame(loop);
 }
 
-document.body.onclick=()=>{if(y===0)vy=12};
+game.onclick=()=>{ if(playing && y===0) vy=14; };
 
 function finish(){
   playing=false;
