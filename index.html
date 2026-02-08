@@ -1,36 +1,50 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>RUN LITTLE MOUSE RUN 🐭</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RUN LITTLE MOUSE RUN 🐭</title>
 <style>
-html,body{
-  margin:0;
-  padding:0;
-  background:#020617;
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background: radial-gradient(circle at top, #12002b, #000);
   overflow:hidden;
-  font-family: 'Segoe UI', sans-serif;
+  font-family:'Segoe UI',sans-serif;
   color:white;
+  touch-action: manipulation;
 }
 #title{
-  position:absolute;
-  top:12px;
+  position:fixed;
+  top:10px;
   width:100%;
   text-align:center;
-  font-size:22px;
+  font-size:26px;
   letter-spacing:2px;
 }
-#counter{
-  position:absolute;
-  top:45px;
-  width:100%;
-  text-align:center;
-  font-size:14px;
-  opacity:.8;
+#game{
+  position:relative;
+  width:100vw;
+  height:100vh;
 }
-canvas{
-  display:block;
+#ground{
+  position:absolute;
+  bottom:80px;
+  width:100%;
+  height:4px;
+  background:#888;
+}
+#mouse{
+  position:absolute;
+  bottom:84px;
+  left:80px;
+  width:70px;
+  transition:transform .15s;
+}
+.obstacle{
+  position:absolute;
+  bottom:84px;
+  width:45px;
+  height:45px;
+  background:#ff2e2e;
 }
 #overlay{
   position:fixed;
@@ -41,149 +55,131 @@ canvas{
   justify-content:center;
   flex-direction:column;
   text-align:center;
-  padding:20px;
 }
-#overlay h1{
-  font-size:22px;
-  margin-bottom:15px;
-}
-button{
-  padding:14px 26px;
-  margin:8px;
-  font-size:16px;
+#overlay h1{margin-bottom:20px}
+#overlay button{
+  padding:12px 30px;
+  font-size:18px;
   border:none;
-  border-radius:30px;
-  cursor:pointer;
+  border-radius:25px;
+  background:#ff4da6;
+  color:white;
 }
-.yes{background:#ff5fa2;color:black;}
-.no{background:#444;color:white;}
+#gojo{
+  position:fixed;
+  right:-400px;
+  bottom:120px;
+  width:300px;
+  display:none;
+}
+#purple{
+  position:fixed;
+  width:120px;
+  height:120px;
+  border-radius:50%;
+  background:radial-gradient(circle,#fff,#b000ff,#400060);
+  box-shadow:0 0 40px #b000ff;
+  display:none;
+}
 </style>
 </head>
 <body>
-
 <div id="title">RUN LITTLE MOUSE RUN 🐭</div>
-<div id="counter">Obstacles cleared: 0 / 14</div>
-<canvas id="game"></canvas>
-
-<div id="overlay">
+<div id="game">
+  <div id="ground"></div>
+  <img id="mouse" src="jerry.png">
+</div><img id="gojo" src="gojo.png">
+<div id="purple"></div><div id="overlay">
   <h1 id="endText"></h1>
-  <button class="yes" onclick="accept()">YES 💖</button>
-  <button class="no" onclick="restart()">Restart Game 😈</button>
-</div>
+  <button onclick="restartGame()">Restart</button>
+</div><script>
+const mouse=document.getElementById('mouse');
+const game=document.getElementById('game');
+const overlay=document.getElementById('overlay');
+const endText=document.getElementById('endText');
+const gojo=document.getElementById('gojo');
+const purple=document.getElementById('purple');
 
-<script>
-const c = document.getElementById("game");
-const ctx = c.getContext("2d");
-c.width = innerWidth;
-c.height = innerHeight;
+let jumping=false;
+let obstacles=[];
+let count=0;
+let gameOver=false;
 
-let ground = c.height - 120;
-let mouse = { x:100, y:ground-40, vy:0, size:40 };
-let obs = [];
-let gravity = 1.2;
-let jumpPower = -18;
-let speed = 6;
-let score = 0;
-let dead = false;
-
-function spawn(){
-  obs.push({ x:c.width+40, w:40, h:40 });
+function jump(){
+  if(jumping||gameOver)return;
+  jumping=true;
+  mouse.style.transform='translateY(-120px)';
+  setTimeout(()=>{
+    mouse.style.transform='translateY(0)';
+    jumping=false;
+  },450);
 }
 
-addEventListener("touchstart",()=> {
-  if(mouse.y >= ground-40) mouse.vy = jumpPower;
-});
-addEventListener("keydown",e=>{
-  if(e.code==="Space" && mouse.y >= ground-40) mouse.vy = jumpPower;
-});
+document.body.addEventListener('touchstart',jump);
+document.body.addEventListener('click',jump);
 
-function draw(){
-  ctx.clearRect(0,0,c.width,c.height);
+function createObstacle(){
+  if(gameOver)return;
+  const obs=document.createElement('div');
+  obs.className='obstacle';
+  obs.style.left='100%';
+  game.appendChild(obs);
+  obstacles.push(obs);
+  let pos=window.innerWidth;
 
-  // road
-  ctx.fillStyle="#444";
-  ctx.fillRect(0,ground,c.width,4);
+  const move=setInterval(()=>{
+    if(gameOver){clearInterval(move);return;}
+    pos-=6;
+    obs.style.left=pos+'px';
 
-  // mouse
-  ctx.font="40px serif";
-  ctx.fillText("🐭", mouse.x, mouse.y+40);
-
-  // obstacles
-  ctx.fillStyle="#ff0055";
-  obs.forEach(o=>{
-    ctx.fillRect(o.x, ground-o.h, o.w, o.h);
-  });
-}
-
-function update(){
-  mouse.vy += gravity;
-  mouse.y += mouse.vy;
-  if(mouse.y > ground-40) mouse.y = ground-40;
-
-  obs.forEach(o=>o.x -= speed);
-
-  if(obs.length && obs[0].x < -50){
-    obs.shift();
-    score++;
-    speed += 0.4;
-    document.getElementById("counter").innerText =
-      `Obstacles cleared: ${score} / 14`;
-  }
-
-  obs.forEach(o=>{
-    if(
-      mouse.x+30 > o.x &&
-      mouse.x < o.x+o.w &&
-      mouse.y+40 > ground-o.h
-    ){
-      kill();
+    const mRect=mouse.getBoundingClientRect();
+    const oRect=obs.getBoundingClientRect();
+    if(!(mRect.top>oRect.bottom||mRect.bottom<oRect.top||mRect.right<oRect.left||mRect.left>oRect.right)){
+      endFail();
     }
-  });
 
-  if(score === 14 && !dead){
-    gojo();
-  }
+    if(pos<-60){
+      clearInterval(move);
+      obs.remove();
+      count++;
+      if(count===14)endWin();
+    }
+  },20);
 }
 
-function loop(){
-  if(!dead){
-    draw();
-    update();
-    requestAnimationFrame(loop);
-  }
+function endFail(){
+  gameOver=true;
+  overlay.style.display='flex';
+  endText.innerText='So… do you agree your boyfriend is always right and want to be his Valentine? 😼';
 }
 
-function kill(){
-  dead = true;
-  ctx.fillStyle="rgba(160,0,255,.6)";
-  ctx.fillRect(0,0,c.width,c.height);
-  setTimeout(gojo,600);
+function endWin(){
+  gameOver=true;
+  gojo.style.display='block';
+  let gx=-400;
+  const slide=setInterval(()=>{
+    gx+=10;
+    gojo.style.right=gx+'px';
+    if(gx>20){clearInterval(slide);shoot();}
+  },30);
 }
 
-function gojo(){
-  dead = true;
-  document.getElementById("overlay").style.display="flex";
-  document.getElementById("endText").innerHTML =
-   `💥 SATORU GOJO APPEARS 💥<br><br>
-    Hollow Purple obliterates the mouse.<br><br>
-    So Nandini…<br>
-    Do you accept that your boyfriend is always right<br>
-    and will you be his Valentine? 😼`;
+function shoot(){
+  purple.style.display='block';
+  let x=window.innerWidth-200;
+  let y=200;
+  const blast=setInterval(()=>{
+    x-=18; y+=6;
+    purple.style.left=x+'px';
+    purple.style.top=y+'px';
+    if(x<100){clearInterval(blast); endFail();}
+  },30);
 }
 
-function accept(){
-  document.getElementById("endText").innerHTML =
-   `🎉🎈 CONGRATULATIONS NANDINI 🎈🎉<br><br>
-    You are officially appointed as<br>
-    <b>Mr. Ishit’s Valentine</b> 💖😼`;
-}
-
-function restart(){
+function restartGame(){
   location.reload();
 }
 
-setInterval(spawn,1600);
-loop();
-</script>
-</body>
+setInterval(createObstacle,1600);
+</script></body>
 </html>
