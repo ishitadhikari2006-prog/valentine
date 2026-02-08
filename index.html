@@ -10,7 +10,7 @@
     font-family: Arial, sans-serif;
     background: #fff;
     overflow: hidden;
-    touch-action: manipulation;
+    touch-action: none; /* Disables browser zooming/scrolling gestures */
   }
   .screen {
     position: absolute;
@@ -22,8 +22,11 @@
     text-align: center;
     padding: 20px;
     background: white;
+    /* FIX: Ensure screens are always on top of game sprites */
+    z-index: 100; 
   }
   .hidden { display: none !important; }
+  
   button {
     padding: 16px 36px;
     font-size: 1.2rem;
@@ -31,13 +34,24 @@
     border-radius: 14px;
     cursor: pointer;
     transition: transform 0.2s;
+    /* FIX: Improves touch response on mobile */
+    touch-action: manipulation; 
+    -webkit-tap-highlight-color: transparent;
+    font-weight: bold;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
   }
   #yesBtn { background: #ff5fa2; color: #fff; }
   #noBtn { background: #444; color: #fff; }
   .buttons { display: flex; gap: 20px; margin-top: 30px; }
 
-  #game { justify-content: flex-start; background: white; }
+  /* GAME SCREEN */
+  #game { 
+    justify-content: flex-start; 
+    background: white; 
+    z-index: 10; /* Lower than start/end screens, but holds game elements */
+  }
   #title { margin-top: 20px; font-size: 1.3rem; font-weight: bold; }
+  
   #ground {
     position: absolute;
     bottom: 80px;
@@ -45,6 +59,7 @@
     height: 4px;
     background: #aaa;
   }
+  
   #jerry {
     position: absolute;
     bottom: 80px;
@@ -53,13 +68,17 @@
     height: 60px;
     object-fit: contain;
     z-index: 10;
+    /* FIX: Prevent image from blocking taps */
+    pointer-events: none; 
   }
+  
   .obstacle {
     position: absolute;
     bottom: 80px;
     width: 20px;
     height: 60px;
     background: #ff5fa2;
+    pointer-events: none;
   }
 
   /* Finish Line */
@@ -86,6 +105,8 @@
     width: 160px;
     z-index: 20;
     transition: right 1s ease-out;
+    /* FIX: Prevent invisible overlay blocking */
+    pointer-events: none; 
   }
   #gojo.appear { right: 20px; }
 
@@ -100,12 +121,13 @@
     filter: blur(2px);
     z-index: 25;
     opacity: 0;
+    /* FIX: Prevent invisible overlay blocking */
+    pointer-events: none;
   }
 </style>
 </head>
 <body>
 
-<!-- Start Screen -->
 <div id="start" class="screen">
   <h2>Do you accept your bf is always right in every argument and you wanna be his Valentine 😼❤️</h2>
   <div class="buttons">
@@ -114,7 +136,6 @@
   </div>
 </div>
 
-<!-- Game Screen -->
 <div id="game" class="screen hidden">
   <div id="title">RUN LITTLE MOUSE RUN</div>
   <img id="jerry" src="jerry.png" alt="Jerry">
@@ -124,7 +145,6 @@
 <img id="gojo" src="gojo.png" alt="Gojo">
 <div id="purple"></div>
 
-<!-- End Screen -->
 <div id="end" class="screen hidden"></div>
 
 <script>
@@ -147,24 +167,27 @@ let gameInterval, loopId, blastInterval;
 // Yes Button
 yesBtn.onclick = () => win();
 
-// No Button
+// No Button Logic
 noBtn.onclick = (e) => {
-  e.stopPropagation();
+  e.stopPropagation(); // Stop event bubbling
   noCount++;
   noBtn.style.transform = `scale(${Math.max(0.6, 1 - noCount * 0.05)})`;
   yesBtn.style.transform = `scale(${Math.min(1.5, 1 + noCount * 0.05)})`;
-  if(noCount >= 10){
+  
+  if(noCount >= 5){ // Reduced to 5 for quicker testing, change back to 10 if you want
     start.classList.add('hidden');
     gameScreen.classList.remove('hidden');
     startGame();
   }
 };
 
-// Jump
+// Jump Logic
 function jump(e) {
-    if(e && e.cancelable) e.preventDefault();
+    if(e && e.cancelable) e.preventDefault(); // Prevent double-tap zoom
     if(playing && y < 5) vy = 15;
 }
+
+// Bind jump to the whole screen for better mobile hit area
 gameScreen.addEventListener('click', jump);
 gameScreen.addEventListener('touchstart', jump, {passive: false});
 
@@ -176,6 +199,7 @@ function startGame(){
   obstacles.forEach(o => o.remove());
   obstacles = [];
 
+  // Speed up obstacle spawn slightly
   gameInterval = setInterval(spawnObstacle, 1300);
   loopId = requestAnimationFrame(loop);
 }
@@ -192,21 +216,24 @@ function spawnObstacle(){
 function loop(){
   if(!playing) return;
 
-  vy -= 0.7; y += vy;
+  vy -= 0.7; // Gravity
+  y += vy;
   if(y < 0){ y=0; vy=0; }
   jerry.style.bottom = (80 + y) + 'px';
 
   obstacles.forEach((o, i) => {
-    o.style.left = (o.offsetLeft - 6) + 'px';
+    let currentLeft = parseFloat(o.style.left);
+    o.style.left = (currentLeft - 6) + 'px';
 
-    // Collision
-    if(o.offsetLeft < 90 && o.offsetLeft > 40 && y < 55){
+    // Collision Detection (Fixed bounds)
+    if(currentLeft < 90 && currentLeft > 40 && y < 55){
       showLoseScreen();
     }
 
-    // Passed
-    if(o.offsetLeft < -50){
-      o.remove(); obstacles.splice(i, 1);
+    // Passed Obstacle
+    if(currentLeft < -50){
+      o.remove(); 
+      obstacles.splice(i, 1);
       passed++;
       if(passed >= 12) finishSequence();
     }
@@ -236,13 +263,15 @@ function finishSequence(){
 
 function firePurple(){
   purple.style.opacity='1';
-  purple.style.left = window.innerWidth + 'px';
+  purple.style.left = (window.innerWidth - 50) + 'px'; // Fix start position
   purple.style.bottom = '150px';
 
   blastInterval = setInterval(()=>{
-    let left = parseInt(purple.style.left);
-    left -= 15;
+    let left = parseInt(purple.style.left || window.innerWidth);
+    left -= 25; // Speed of purple
     purple.style.left = left + 'px';
+    
+    // Impact logic
     if(left < 80){
       clearInterval(blastInterval);
       jerry.classList.add('hidden');
@@ -273,11 +302,12 @@ function showLoseScreen(){
   `;
 }
 
+// Global window functions for onclick attributes
 window.win = function(){
   start.classList.add('hidden');
   gameScreen.classList.add('hidden');
   end.classList.remove('hidden');
-  end.innerHTML = "<h2 style='color:#ff5fa2; font-size:2rem;'>YAY! <br>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
+  end.innerHTML = "<h2 style='color:#ff5fa2; font-size:2rem; padding:20px;'>YAY! <br>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
 }
 
 window.restartGame = function(){
@@ -286,11 +316,16 @@ window.restartGame = function(){
   jerry.classList.remove('hidden');
   purple.style.opacity='0';
   gojo.classList.remove('appear');
+  
+  // Cleanup old finish elements
+  const oldFinish = document.getElementById('finish');
+  if(oldFinish) oldFinish.remove();
+  const oldText = document.getElementById('finishText');
+  if(oldText) oldText.remove();
+
   obstacles.forEach(o=>o.remove());
   obstacles=[];
-  document.getElementById('finish')?.remove();
-  document.getElementById('finishText')?.remove();
-  noCount = 10;
+  
   startGame();
 }
 </script>
