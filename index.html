@@ -214,11 +214,9 @@ function endGame(win){
 
 function showEnding(win){
   const end=document.getElementById('end');
-  const text=document.getElementById('endText');
   end.classList.remove('hidden');
 
   if(win){
-    text.innerHTML="You are successfully appointed as Valentine of Mr Ishit 😚❤️";
     end.innerHTML = `<h2 style='color:black'>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>`;
   }else{
     end.innerHTML = `
@@ -229,15 +227,14 @@ function showEnding(win){
       </div>`;
     document.getElementById('finalYes').onclick=()=>{
       end.innerHTML = `<h2 style='color:black'>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>`;
-    }
-  }
-}else{
-    text.innerHTML=`<span style='color:black'>Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️</span><br><br>
-    <button onclick=\"acceptYes()\">YES</button>
-    <button onclick=\"location.reload()\">RESTART</button>`;
+    };
   }
 }
+
 function acceptYes(){
+  document.getElementById('end').innerHTML = `<h2 style='color:black'>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>`;
+}
+(){
   document.getElementById('endText').innerHTML="<span style='color:black'>You are successfully appointed as Valentine of Mr Ishit 😚❤️</span";
 }
 </script></body>
