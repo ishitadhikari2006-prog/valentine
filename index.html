@@ -156,13 +156,16 @@ noBtn.onclick = (e) => {
     startGame();
   }
 };
- function startGame(){
+ // --- PART 2: GAME LOGIC (Paste this after the closing bracket '};' of noBtn) ---
+
+function startGame(){
   playing = true;
   y = 0; vy = 0;
   passed = 0;
   jerry.style.bottom = '80px';
   obstacles = [];
   
+  // Clear potential existing loops
   if(gameInterval) clearInterval(gameInterval);
   if(loopId) cancelAnimationFrame(loopId);
 
@@ -182,6 +185,7 @@ function spawnObstacle(){
 function loop(){
   if(!playing) return;
   
+  // Gravity logic
   vy -= 0.6;
   y += vy;
   if(y < 0) { y = 0; vy = 0; }
@@ -190,7 +194,8 @@ function loop(){
   obstacles.forEach((o, i) => {
     o.style.left = (o.offsetLeft - 5) + 'px';
     
-    // Collision Detection -> Triggers Death
+    // Collision Detection -> Triggers YOU DIED
+    // 90 and 40 are purely based on your CSS widths/positions
     if(o.offsetLeft < 90 && o.offsetLeft > 40 && y < 50){
       triggerDeath();
     }
@@ -207,12 +212,15 @@ function loop(){
   loopId = requestAnimationFrame(loop);
 }
 
-// --- JUMP FIX ---
+// --- JUMP LOGIC (Fixed for Mobile - Tapping anywhere works) ---
 function jump(e) {
   if(!playing) return;
+  // Prevent scrolling on tap
   if(e.type === 'touchstart' && e.cancelable) e.preventDefault();
+  
   if(y < 10) vy = 14; 
 }
+// Attach to window so you can tap anywhere
 window.addEventListener('touchstart', jump, {passive: false});
 window.addEventListener('mousedown', jump);
 
@@ -237,7 +245,7 @@ function finish(){
 function gojoAttack(){
   gojo.classList.remove('hidden');
   
-  // 1. SLIDE IN
+  // 1. SLIDE IN (Smooth Animation)
   setTimeout(() => {
     gojo.classList.add('appear');
   }, 50);
@@ -245,30 +253,35 @@ function gojoAttack(){
   // 2. WAIT, THEN THROW HOLLOW PURPLE
   setTimeout(() => {
       purple.classList.remove('hidden');
+      
+      // Reset position
       let x = window.innerWidth - 200;
       purple.style.bottom = '150px';
-      purple.style.left = x + 'px'; 
+      purple.style.left = x + 'px';
 
+      // Attack Loop
       const blast = setInterval(() => {
         x -= 15;
         purple.style.left = x + 'px';
         
-        if(x < 80){ 
+        if(x < 80){ // Impact with Jerry position
           clearInterval(blast);
-          triggerDeath(); // Collision with ball triggers Death
+          triggerDeath(); // Show YOU DIED
         }
       }, 16);
-  }, 1500); // 1.5s Wait time
+  }, 1500); // 1.5 Second Wait
 }
 
-// DEATH LOGIC
+// --- NEW FUNCTION: YOU DIED SEQUENCE ---
 function triggerDeath(){
   playing = false;
   clearInterval(gameInterval);
   cancelAnimationFrame(loopId);
   
+  // Show YOU DIED
   deathScreen.classList.remove('hidden');
 
+  // Wait 2 seconds, then show the "Lose" screen with text
   setTimeout(() => {
     deathScreen.classList.add('hidden');
     lose();
@@ -277,9 +290,11 @@ function triggerDeath(){
 
 function lose(){
   playing = false;
+  
   gameScreen.classList.add('hidden');
   end.classList.remove('hidden');
   
+  // Reset Gojo/Purple visibility
   gojo.classList.remove('appear');
   gojo.classList.add('hidden');
   purple.classList.add('hidden');
@@ -294,6 +309,7 @@ function lose(){
   `;
 }
 
+// Global functions for the innerHTML buttons
 window.win = function(){
   start.classList.add('hidden');
   gameScreen.classList.add('hidden');
@@ -305,12 +321,14 @@ window.restartGame = function(){
   end.classList.add('hidden');
   gameScreen.classList.remove('hidden');
 
+  // Clean up old obstacles
   obstacles.forEach(o => o.remove());
   obstacles = [];
   passed = 0;
   y = 0; vy = 0;
-  noCount = 14; 
+  noCount = 14; // Keep difficulty or logic state
 
+  // Remove finish line if it exists
   const finishLine = document.getElementById('finish');
   if(finishLine) finishLine.remove();
   
