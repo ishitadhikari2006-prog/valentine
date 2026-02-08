@@ -130,7 +130,12 @@ const start=document.getElementById('start');
 const game=document.getElementById('game');
 let noCount=0;
 
-yesBtn.onclick=()=>showEnding(true);
+yesBtn.onclick=()=>{
+  start.classList.add('hidden');
+  document.getElementById('end').classList.remove('hidden');
+  document.getElementById('endText').innerHTML=
+    "<span style='color:black'>You are successfully appointed as Valentine of Mr Ishit 😚❤️</span>";
+};
 
 noBtn.onclick=()=>{
   noCount++;
@@ -207,11 +212,20 @@ function endGame(win){
 }
 
 function showEnding(win){
-  document.getElementById('end').classList.remove('hidden');
-  document.getElementById('endText').innerHTML=
-    win?
-    "Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️<br><br>You are officially the Valentine of Mr. Ishit 💖":
-    "Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️<br><br>Or do you want to restart the game?";
+  const end=document.getElementById('end');
+  const text=document.getElementById('endText');
+  end.classList.remove('hidden');
+
+  if(win){
+    text.innerHTML="<span style='color:black'>You are successfully appointed as Valentine of Mr Ishit 😚❤️</span>";
+  }else{
+    text.innerHTML=`<span style='color:black'>Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️</span><br><br>
+    <button onclick=\"acceptYes()\">YES</button>
+    <button onclick=\"location.reload()\">RESTART</button>`;
+  }
+}
+function acceptYes(){
+  document.getElementById('endText').innerHTML="<span style='color:black'>You are successfully appointed as Valentine of Mr Ishit 😚❤️</span";
 }
 </script></body>
 </html>
