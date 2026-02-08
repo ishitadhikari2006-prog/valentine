@@ -84,7 +84,7 @@
     bottom: 130px;
     width: 140px;
     opacity: 0;
-    transition: right 0.8s ease, opacity 0.8s ease;
+    transition: right 1.2s ease, opacity 0.5s ease; /* Smooth slide */
     z-index: 6;
   }
   #purple {
@@ -95,6 +95,22 @@
     background: purple;
     filter: blur(6px);
     z-index: 7;
+  }
+  
+  /* Added YOU DIED styles */
+  #deathScreen {
+    position: absolute;
+    inset: 0;
+    background: black;
+    color: red;
+    z-index: 20;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 4rem;
+    font-weight: bold;
+    font-family: 'Courier New', Courier, monospace;
+    text-shadow: 0 0 10px darkred;
   }
 </style>
 </head>
@@ -117,6 +133,8 @@
 <img id="gojo" src="gojo.png" class="hidden">
 <div id="purple" class="hidden"></div>
 
+<div id="deathScreen" class="hidden">YOU DIED</div>
+
 <div id="end" class="screen hidden" style="z-index:15"></div>
 
 <script>
@@ -128,6 +146,7 @@ const noBtn = document.getElementById('noBtn');
 const jerry = document.getElementById('jerry');
 const gojo = document.getElementById('gojo');
 const purple = document.getElementById('purple');
+const deathScreen = document.getElementById('deathScreen');
 
 let noCount = 0;
 let y = 0, vy = 0;
@@ -136,6 +155,7 @@ let passed = 0;
 let playing = false;
 let gameInterval;
 let loopId;
+let blastInterval; // Added to manage purple ball loop
 
 // Yes Button Logic
 yesBtn.onclick = (e) => {
@@ -159,12 +179,7 @@ noBtn.onclick = (e) => {
 
 function startGame(){
   playing = true;
-  y = 0; vy = 0;
-  passed = 0;
-  jerry.style.bottom = '80px';
-  obstacles = [];
-  
-  gameInterval = setInterval(spawnObstacle, 1300);
+  gameInterval = setInterval(spawnObstacle, 1500);
   loopId = requestAnimationFrame(loop);
 }
 
@@ -172,7 +187,7 @@ function spawnObstacle(){
   if(!playing) return;
   const o = document.createElement('div');
   o.className = 'obstacle';
-  o.style.left = (window.innerWidth + 50) + 'px'; 
+  o.style.left = '100%';
   gameScreen.appendChild(o);
   obstacles.push(o);
 }
@@ -180,80 +195,84 @@ function spawnObstacle(){
 function loop(){
   if(!playing) return;
   
-  vy -= 0.7; 
+  // Gravity logic
+  vy -= 0.6;
   y += vy;
   if(y < 0) { y = 0; vy = 0; }
   jerry.style.bottom = (80 + y) + 'px';
 
   obstacles.forEach((o, i) => {
-    o.style.left = (o.offsetLeft - 6) + 'px';
+    o.style.left = (o.offsetLeft - 5) + 'px';
     
-    // Collision with WALL
-    if(o.offsetLeft < 90 && o.offsetLeft > 40 && y < 55){
-      triggerDeath(); // Calls the death screen
+    // Collision Detection (Wall)
+    if(o.offsetLeft < 90 && o.offsetLeft > 40 && y < 50){
+      triggerDeath(); // Changed from lose() to triggerDeath()
     }
     
-    // Pass count
-    if(o.offsetLeft < -50){
+    // Remove obstacle if off screen
+    if(o.offsetLeft < -30){
       o.remove();
       obstacles.splice(i, 1);
       passed++;
-      if(passed === 12) finishSequence();
+      if(passed === 14) finish();
     }
   });
   
   loopId = requestAnimationFrame(loop);
 }
 
-function finishSequence(){
+// Jump Logic (Mobile Tap or Click)
+gameScreen.onclick = () => { 
+  if(playing && y === 0) vy = 14; 
+};
+
+function finish(){
   playing = false;
   clearInterval(gameInterval);
   cancelAnimationFrame(loopId);
 
-  // 1. Show Finish Line Text
   const f = document.createElement('div');
   f.id = 'finish';
   gameScreen.appendChild(f);
   
   const t = document.createElement('div');
   t.id = 'finishText';
-  t.innerText = "No I don't!";
+  t.innerText = "No I don't";
   gameScreen.appendChild(t);
-
-  // 2. SLIDE Gojo In (Trigger CSS Transition)
-  setTimeout(() => {
-    gojo.classList.add('appear'); 
-  }, 200);
-
-  // 3. WAIT (1.5s) then throw Hollow Purple
-  setTimeout(() => {
-    firePurple();
-  }, 1500);
+  
+  // Wait a moment then start Gojo sequence
+  setTimeout(gojoAttack, 500);
 }
 
-function firePurple(){
-    purple.style.opacity = '1';
-    purple.style.right = '140px'; 
-    purple.style.bottom = '150px';
-    purple.classList.remove('hidden');
+function gojoAttack(){
+  gojo.classList.remove('hidden');
+  
+  // 1. SLIDE IN
+  setTimeout(() => {
+    gojo.style.opacity = '1';
+    gojo.style.right = '20px';
+  }, 50);
 
-    let purplePos = window.innerWidth - 140; 
+  // 2. WAIT, THEN THROW HOLLOW PURPLE
+  setTimeout(() => {
+      purple.classList.remove('hidden');
+      let x = window.innerWidth - 200;
+      purple.style.bottom = '150px';
+      purple.style.left = x + 'px'; // Reset position
 
-    blastInterval = setInterval(() => {
-        purplePos -= 15; 
-        purple.style.left = purplePos + 'px';
-
-        if(purplePos < 80){
-            clearInterval(blastInterval);
-            jerry.classList.add('hidden');
-            purple.classList.add('hidden');
-            
-            triggerDeath(); // Calls the death screen
+      blastInterval = setInterval(() => {
+        x -= 15;
+        purple.style.left = x + 'px';
+        
+        if(x < 80){ // Impact with Jerry position
+          clearInterval(blastInterval);
+          triggerDeath(); // Changed from lose() to triggerDeath()
         }
-    }, 16);
+      }, 16);
+  }, 1500); // 1.5 second delay between slide and attack
 }
 
-// --- NEW FUNCTION: TRIGGERS DEATH SCREEN ---
+// New function to handle the YOU DIED sequence
 function triggerDeath(){
   playing = false;
   clearInterval(gameInterval);
@@ -261,55 +280,66 @@ function triggerDeath(){
   if(blastInterval) clearInterval(blastInterval);
 
   // Show "YOU DIED"
-  deathMsg.style.display = 'flex';
+  deathScreen.classList.remove('hidden');
 
-  // Wait 2 seconds, then show the final options
+  // Wait 2 seconds, then show original lose screen
   setTimeout(() => {
-    deathMsg.style.display = 'none';
-    showLoseScreen();
+    deathScreen.classList.add('hidden');
+    lose();
   }, 2000);
 }
 
-function showLoseScreen(){
+function lose(){
+  playing = false;
+  
   gameScreen.classList.add('hidden');
   end.classList.remove('hidden');
   
-  // Reset for next round
-  gojo.classList.remove('appear'); 
-  purple.style.opacity = '0';
+  // Reset visual elements
+  gojo.classList.add('hidden');
+  gojo.style.right = '-200px'; // Reset slide position
+  gojo.style.opacity = '0';
+  purple.classList.add('hidden');
   
   end.innerHTML = `
-    <h2 style="color:#ff5fa2; margin-bottom:20px;">Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️</h2>
+    <h2>Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️</h2>
+    <br>
     <div class="buttons">
-      <button onclick="win()" style="background:#ff5fa2; color:fff;">YES!</button>
-      <button onclick="restartGame()" style="background:#444; color:fff;">Try Again</button>
+      <button onclick="win()" style="background:#ff5fa2; color:fff;">YES</button>
+      <button onclick="restartGame()" style="background:#444; color:fff;">RESTART</button>
     </div>
   `;
 }
 
+// Global functions for the innerHTML buttons
 window.win = function(){
   start.classList.add('hidden');
   gameScreen.classList.add('hidden');
   end.classList.remove('hidden');
-  end.innerHTML = "<h2 style='color:#ff5fa2; font-size:2rem;'>YAY! <br>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
+  end.innerHTML = "<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
 }
 
 window.restartGame = function(){
   end.classList.add('hidden');
   gameScreen.classList.remove('hidden');
-  
+
+  // Clean up old obstacles
   obstacles.forEach(o => o.remove());
   obstacles = [];
-  document.getElementById('finish')?.remove();
-  document.getElementById('finishText')?.remove();
+  passed = 0;
+  y = 0; vy = 0;
+  noCount = 14; // Keep difficulty or logic state
+
+  // Remove finish line if it exists
+  const finishLine = document.getElementById('finish');
+  if(finishLine) finishLine.remove();
   
-  jerry.classList.remove('hidden');
-  purple.classList.remove('hidden'); 
-  purple.style.opacity = '0'; 
+  const finishText = document.getElementById('finishText');
+  if(finishText) finishText.remove();
+
+  gojo.style.right = '-200px';
+  gojo.style.opacity = '0';
   
-  gojo.classList.remove('appear');
-  
-  noCount = 10; 
   startGame();
 }
 </script>
