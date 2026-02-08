@@ -2,179 +2,82 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nandini — Valentine</title><style>
+<title>Nandini — Valentine</title>
+<style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background:#ffffff !important;
-  color:#000000 !important;
-  overflow:hidden;
-}
-
-.screen{
-  position:absolute;
-  inset:0;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  text-align:center;
-  padding:24px;
-}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#fff;color:#000;overflow:hidden}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:24px}
 .hidden{display:none}
-
-/* START SCREEN */
-#start h1{
-  font-size:2rem;
-  font-weight:500;
-  margin-bottom:40px;
-  color:#000000 !important;
-}
-#start p{
-  font-size:1.05rem;
-  opacity:0.9;
-  margin-bottom:34px;
-}
+#start h1{font-size:2rem;font-weight:500;margin-bottom:20px}
+#start p{font-size:1.05rem;margin-bottom:30px}
 .buttons{display:flex;gap:20px}
-button{
-  padding:18px 44px;
-  font-size:1.2rem;
-  border:none;
-  border-radius:16px;
-  cursor:pointer;
-}
+button{padding:16px 40px;font-size:1.1rem;border:none;border-radius:16px;cursor:pointer}
 #yesBtn{background:#ff5fa2;color:#fff}
 #noBtn{background:#444;color:#fff}
-
-/* GAME */
 #game{justify-content:flex-start}
-#title{
-  margin-top:18px;
-  font-size:1.2rem;
-  letter-spacing:1px;
-}
-#ground{
-  position:absolute;
-  bottom:70px;
-  width:100%;
-  height:4px;
-  background:#aaa
-}
-#jerry{
-  position:absolute;
-  bottom:70px;
-  left:40px;
-  width:60px
-}
-.obstacle{
-  position:absolute;
-  bottom:70px;
-  width:22px;
-  height:60px;
-  background:#ff5fa2
-}
-#finish{
-  position:absolute;
-  bottom:70px;
-  right:40px;
-  width:10px;
-  height:80px;
-  background:#fff
-}
-
-#gojo{
-  position:absolute;
-  right:-220px;
-  bottom:120px;
-  width:160px;
-  transition:0.8s
-}
-#purple{
-  position:absolute;
-  right:200px;
-  bottom:150px;
-  width:34px;
-  height:34px;
-  border-radius:50%;
-  background:#a855f7;
-  filter:blur(6px);
-}
-
-/* END */
-#end h2{
-  font-weight:400;
-  line-height:1.5;
-  margin-bottom:30px
-}
-</style></head>
-<body><!-- START --><div id="start" class="screen">
-  <h1 style="color:#000000 !important;">Nandini, would you like to be my Valentine?</h1>
+#title{margin-top:18px;font-size:1.2rem;letter-spacing:1px}
+#jerry{position:absolute;bottom:70px;left:40px;width:60px}
+#ground{position:absolute;bottom:70px;width:100%;height:4px;background:#aaa}
+.obstacle{position:absolute;bottom:70px;width:20px;height:60px;background:#ff5fa2}
+#finish{position:absolute;bottom:70px;right:40px;width:10px;height:80px;background:#000}
+#gojo{position:absolute;right:-200px;bottom:120px;width:150px;transition:0.8s}
+#purple{position:absolute;right:200px;bottom:150px;width:30px;height:30px;border-radius:50%;background:#a855f7;filter:blur(6px)}
+</style>
+</head>
+<body><div id="start" class="screen">
+  <h1>Nandini, would you like to be my Valentine?</h1>
   <p>Do you accept your bf is always right in every argument and you wanna be his Valentine 😼❤️</p>
   <div class="buttons">
     <button id="yesBtn">YES</button>
     <button id="noBtn">NO</button>
   </div>
-</div><!-- GAME --><div id="game" class="screen hidden">
+</div><div id="game" class="screen hidden">
   <div id="title">RUN LITTLE MOUSE RUN</div>
-  <img id="jerry" src="jerry.png" alt="Jerry">
+  <img id="jerry" src="jerry.png">
   <div id="ground"></div>
-</div><img id="gojo" src="gojo.png" class="hidden" alt="Gojo">
-<div id="purple" class="hidden"></div><!-- END --><div id="end" class="screen hidden">
-  <h2 id="endText"></h2>
-  <button onclick="location.reload()">Restart</button>
-</div><script>
-/* START LOGIC */
+</div><img id="gojo" src="gojo.png" class="hidden">
+<div id="purple" class="hidden"></div><div id="end" class="screen hidden"></div><script>
+// ---- START SCREEN LOGIC ----
 const yesBtn=document.getElementById('yesBtn');
 const noBtn=document.getElementById('noBtn');
 const start=document.getElementById('start');
 const game=document.getElementById('game');
+const end=document.getElementById('end');
 let noCount=0;
 
-yesBtn.onclick=()=>{
+yesBtn.addEventListener('click',()=>{
   start.classList.add('hidden');
-  document.getElementById('end').classList.remove('hidden');
-  document.getElementById('endText').innerHTML=
-    "<span style='color:black'>You are successfully appointed as Valentine of Mr Ishit 😚❤️</span>";
-};
+  end.classList.remove('hidden');
+  end.innerHTML="<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
+});
 
-noBtn.onclick=()=>{
+noBtn.addEventListener('click',()=>{
   noCount++;
-  const noScale = Math.max(0.15, 1 - noCount * 0.06);
-  const yesScale = 1 + noCount * 0.08;
-  noBtn.style.transform = `scale(${noScale})`;
-  yesBtn.style.transform = `scale(${yesScale})`;
-
-  if(noCount >= 14){
+  noBtn.style.transform=`scale(${Math.max(0.15,1-noCount*0.06)})`;
+  yesBtn.style.transform=`scale(${1+noCount*0.08})`;
+  if(noCount>=14){
     start.classList.add('hidden');
     game.classList.remove('hidden');
-    enableControls();
     startGame();
   }
-};
+});
 
-/* GAME LOGIC */
+// ---- GAME LOGIC ----
 const jerry=document.getElementById('jerry');
-let y=0,vy=0,gravity=0.6;
-let obstacles=[];let passed=0;let playing=true;
+let y=0,vy=0,gravity=0.6,playing=true;
+let obstacles=[],passed=0;
 
-function jump(){if(y===0)vy=12}
-// Jump controls will be enabled only after game starts
-let controlsEnabled = false;
-function enableControls(){
-  if(controlsEnabled) return;
-  controlsEnabled = true;
-  document.body.addEventListener('click', jump);
-  document.body.addEventListener('touchstart', jump);
-}
-
+function jump(){ if(y===0) vy=12; }
 
 function startGame(){
+  document.body.addEventListener('click',jump);
+  document.body.addEventListener('touchstart',jump);
   setInterval(spawnObstacle,1700);
   requestAnimationFrame(loop);
 }
 
 function spawnObstacle(){
-  if(!playing)return;
+  if(!playing) return;
   const o=document.createElement('div');
   o.className='obstacle';
   o.style.left='100%';
@@ -183,22 +86,21 @@ function spawnObstacle(){
 }
 
 function loop(){
-  if(!playing)return;
-  vy-=gravity;y+=vy;if(y<0){y=0;vy=0}
+  if(!playing) return;
+  vy-=gravity; y+=vy; if(y<0){y=0;vy=0}
   jerry.style.bottom=70+y+'px';
 
   obstacles.forEach((o,i)=>{
-    let x=o.offsetLeft-4;o.style.left=x+'px';
+    let x=o.offsetLeft-4; o.style.left=x+'px';
     if(x<95 && x>40 && y<55) endGame(false);
-    if(x<-40){o.remove();obstacles.splice(i,1);passed++;if(passed===14)finish()}
+    if(x<-40){o.remove(); obstacles.splice(i,1); passed++; if(passed===14) finish();}
   });
   requestAnimationFrame(loop);
 }
 
 function finish(){
   playing=false;
-  const f=document.createElement('div');
-  f.id='finish';game.appendChild(f);
+  const f=document.createElement('div'); f.id='finish'; game.appendChild(f);
   setTimeout(gojoAttack,600);
 }
 
@@ -210,40 +112,19 @@ function gojoAttack(){
   gojo.style.right='20px';
   let pX=window.innerWidth-200;
   const blast=setInterval(()=>{
-    pX-=16;purple.style.left=pX+'px';
-    if(pX<80){clearInterval(blast);endGame(true)}
+    pX-=16; purple.style.left=pX+'px';
+    if(pX<80){ clearInterval(blast); endGame(false); }
   },16);
 }
 
-function endGame(win){
-  playing=false;game.classList.add('hidden');
-  showEnding(win);
-}
-
-function showEnding(win){
-  const end=document.getElementById('end');
+function endGame(){
+  playing=false; game.classList.add('hidden');
   end.classList.remove('hidden');
-
-  if(win){
-    end.innerHTML = `<h2 style='color:black'>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>`;
-  }else{
-    end.innerHTML = `
-      <h2 style='color:black'>Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️<br><br>Or you wanna restart the game?</h2>
-      <div style='display:flex;gap:20px;margin-top:30px'>
-        <button id='finalYes'>YES</button>
-        <button onclick='location.reload()'>RESTART</button>
-      </div>`;
-    document.getElementById('finalYes').onclick=()=>{
-      end.innerHTML = `<h2 style='color:black'>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>`;
-    };
-  }
+  end.innerHTML=`<h2>Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️<br><br>Or you wanna restart the game?</h2><br><button onclick=\"acceptYes()\">YES</button> <button onclick=\"location.reload()\">RESTART</button>`;
 }
 
 function acceptYes(){
-  document.getElementById('end').innerHTML = `<h2 style='color:black'>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>`;
-}
-(){
-  document.getElementById('endText').innerHTML="<span style='color:black'>You are successfully appointed as Valentine of Mr Ishit 😚❤️</span";
+  end.innerHTML="<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
 }
 </script></body>
 </html>
