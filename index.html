@@ -33,11 +33,11 @@
   /* --- GOJO & ANIMATION STYLES --- */
   #gojo {
     position: absolute;
-    bottom: 80px;
-    right: -300px; /* Starts off-screen */
+    /* MOVED UP HERE: Changed from 80px to 115px */
+    bottom: 115px; 
+    right: -300px; 
     width: 140px;
     z-index: 3;
-    /* Smooth slide animation */
     transition: right 1.5s cubic-bezier(0.25, 0.8, 0.25, 1); 
   }
 
@@ -50,7 +50,7 @@
     filter: blur(4px);
     box-shadow: 0 0 20px 10px rgba(128, 0, 128, 0.7);
     z-index: 4;
-    display: none; /* Hidden until thrown */
+    display: none; 
   }
 
 </style>
@@ -89,14 +89,14 @@ const purple = document.getElementById('purple');
 let noCount=0, y=0, vy=0, obstacles=[], passed=0, playing=false;
 let gameInterval, loopId, purpleInterval;
 
-// --- INITIAL YES BUTTON ---
+// --- INITIAL YES ---
 yesBtn.onclick = () => {
   start.classList.add('hidden');
   end.classList.remove('hidden');
   end.innerHTML="<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
 };
 
-// --- INITIAL NO BUTTON ---
+// --- INITIAL NO ---
 noBtn.onclick = () => {
   noCount++;
   noBtn.style.transform = `scale(${Math.max(0.2,1-noCount*0.06)})`;
@@ -138,18 +138,14 @@ function loop(){
     let currentLeft = o.offsetLeft;
     o.style.left = (currentLeft-5)+'px';
 
-    // Collision (Loss)
     if(currentLeft < 90 && currentLeft > 40 && y<50){
-        // If hit, just show final screen for simplicity in this flow
         showFinalOptions();
     }
 
-    // Passed Obstacle
     if(currentLeft<-30){
         o.remove(); 
         obstacles.splice(i,1); 
         passed++; 
-        // WIN CONDITION
         if(passed===14) finish();
     }
   });
@@ -166,7 +162,7 @@ function finish(){
   clearInterval(gameInterval);
   cancelAnimationFrame(loopId);
 
-  // 1. Create Wall
+  // Wall
   const f = document.createElement('div');
   f.id = 'finish';
   game.appendChild(f);
@@ -176,31 +172,29 @@ function finish(){
   t.innerText="No I don't";
   game.appendChild(t);
 
-  // 2. TRIGGER GOJO IMMEDIATELY (No Delay)
+  // IMMEDIATE Slide
   slideGojoIn();
 }
 
 function slideGojoIn(){
-  gojo.style.right = '50px'; // Slides in via CSS transition
+  gojo.style.right = '50px'; 
   
-  // 3. Wait 1.5s for him to arrive and stand there, then Attack
+  // Wait 1.5s then throw
   setTimeout(throwHollowPurple, 1500);
 }
 
 function throwHollowPurple(){
   purple.style.display = 'block';
-  // Position orb relative to Gojo
   let startX = window.innerWidth - 150; 
   let currentX = startX;
   purple.style.left = currentX + 'px';
-  purple.style.bottom = '140px'; 
+  // Adjusted height to match Gojo's new position
+  purple.style.bottom = '175px'; 
 
-  // Animate Orb
   purpleInterval = setInterval(() => {
     currentX -= 15; 
     purple.style.left = currentX + 'px';
 
-    // Hit Jerry
     if(currentX < 80){
       clearInterval(purpleInterval);
       purple.style.display = 'none'; 
@@ -228,7 +222,6 @@ function showFinalOptions(){
   </div>`;
 }
 
-// Global functions for HTML buttons
 window.finalYes = function(){
     end.innerHTML="<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
 }
