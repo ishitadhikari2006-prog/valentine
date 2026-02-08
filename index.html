@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Valentine Game</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
@@ -11,8 +11,7 @@
     background: #ffffff;
     color: #000000;
     overflow: hidden;
-    touch-action: none; /* Critical for mobile game control */
-    user-select: none;
+    touch-action: manipulation; /* Improves mobile touch response */
   }
   .screen {
     z-index: 1;
@@ -24,7 +23,7 @@
     align-items: center;
     text-align: center;
     padding: 20px;
-    background: white;
+    background: white; /* Ensure background covers elements behind */
   }
   .hidden { display: none !important; }
   button {
@@ -54,6 +53,7 @@
     bottom: 80px;
     left: 40px;
     width: 60px;
+    /* Added height just in case image fails to load so you see the box */
     height: 60px; 
     object-fit: contain;
   }
@@ -78,23 +78,15 @@
     right: 20px;
     font-weight: bold;
   }
-  
-  /* Gojo Animation Styles */
   #gojo {
     position: absolute;
-    right: -300px; /* Start hidden off-screen */
+    right: -200px;
     bottom: 130px;
     width: 140px;
     opacity: 0;
-    transition: right 1s ease-out, opacity 0.5s;
+    transition: right 0.8s ease, opacity 0.8s ease;
     z-index: 6;
   }
-  /* Class to make Gojo Slide in */
-  #gojo.appear {
-    right: 20px;
-    opacity: 1;
-  }
-  
   #purple {
     position: absolute;
     width: 30px;
@@ -103,22 +95,6 @@
     background: purple;
     filter: blur(6px);
     z-index: 7;
-  }
-
-  /* YOU DIED Screen Style */
-  #deathScreen {
-    position: absolute;
-    inset: 0;
-    background: black;
-    color: red;
-    z-index: 999;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 4rem;
-    font-weight: bold;
-    font-family: 'Courier New', Courier, monospace;
-    text-shadow: 0 0 10px darkred;
   }
 </style>
 </head>
@@ -138,10 +114,8 @@
   <div id="ground"></div>
 </div>
 
-<img id="gojo" src="gojo.png" alt="Gojo">
+<img id="gojo" src="gojo.png" class="hidden">
 <div id="purple" class="hidden"></div>
-
-<div id="deathScreen" class="hidden">YOU DIED</div>
 
 <div id="end" class="screen hidden" style="z-index:15"></div>
 
@@ -154,7 +128,6 @@ const noBtn = document.getElementById('noBtn');
 const jerry = document.getElementById('jerry');
 const gojo = document.getElementById('gojo');
 const purple = document.getElementById('purple');
-const deathScreen = document.getElementById('deathScreen');
 
 let noCount = 0;
 let y = 0, vy = 0;
@@ -163,7 +136,6 @@ let passed = 0;
 let playing = false;
 let gameInterval;
 let loopId;
-let blastInterval;
 
 // Yes Button Logic
 yesBtn.onclick = (e) => {
@@ -184,17 +156,13 @@ noBtn.onclick = (e) => {
     startGame();
   }
 };
-// --- END OF PART 1 ---
- // --- PASTE THIS AFTER THE BUTTON LOGIC ---
-
-function startGame(){
+ function startGame(){
   playing = true;
   y = 0; vy = 0;
   passed = 0;
   jerry.style.bottom = '80px';
   obstacles = [];
   
-  // Clear any existing intervals to prevent bugs
   if(gameInterval) clearInterval(gameInterval);
   if(loopId) cancelAnimationFrame(loopId);
 
@@ -214,7 +182,6 @@ function spawnObstacle(){
 function loop(){
   if(!playing) return;
   
-  // Gravity logic
   vy -= 0.6;
   y += vy;
   if(y < 0) { y = 0; vy = 0; }
@@ -223,7 +190,7 @@ function loop(){
   obstacles.forEach((o, i) => {
     o.style.left = (o.offsetLeft - 5) + 'px';
     
-    // Collision Detection -> Triggers YOU DIED
+    // Collision Detection -> Triggers Death
     if(o.offsetLeft < 90 && o.offsetLeft > 40 && y < 50){
       triggerDeath();
     }
@@ -240,18 +207,12 @@ function loop(){
   loopId = requestAnimationFrame(loop);
 }
 
-// --- JUMP LOGIC (Fixed for Mobile) ---
+// --- JUMP FIX ---
 function jump(e) {
   if(!playing) return;
-  
-  // Prevent scrolling when tapping
   if(e.type === 'touchstart' && e.cancelable) e.preventDefault();
-  
-  // Jump if on the ground
   if(y < 10) vy = 14; 
 }
-
-// Attach listener to the WHOLE WINDOW so tapping anywhere works
 window.addEventListener('touchstart', jump, {passive: false});
 window.addEventListener('mousedown', jump);
 
@@ -270,14 +231,13 @@ function finish(){
   t.innerText = "No I don't";
   gameScreen.appendChild(t);
   
-  // Start the Gojo sequence
   setTimeout(gojoAttack, 500);
 }
 
 function gojoAttack(){
   gojo.classList.remove('hidden');
   
-  // 1. SLIDE IN (Smooth Animation)
+  // 1. SLIDE IN
   setTimeout(() => {
     gojo.classList.add('appear');
   }, 50);
@@ -285,36 +245,30 @@ function gojoAttack(){
   // 2. WAIT, THEN THROW HOLLOW PURPLE
   setTimeout(() => {
       purple.classList.remove('hidden');
-      
-      // Reset Purple Position
       let x = window.innerWidth - 200;
       purple.style.bottom = '150px';
       purple.style.left = x + 'px'; 
 
-      // Animation Loop for the ball
       const blast = setInterval(() => {
-        x -= 15; // Speed of ball
+        x -= 15;
         purple.style.left = x + 'px';
         
-        // Impact with Jerry
         if(x < 80){ 
           clearInterval(blast);
-          triggerDeath(); // Trigger YOU DIED
+          triggerDeath(); // Collision with ball triggers Death
         }
       }, 16);
-  }, 1500); // 1.5 second wait before throwing
+  }, 1500); // 1.5s Wait time
 }
 
-// --- DEATH LOGIC ---
+// DEATH LOGIC
 function triggerDeath(){
   playing = false;
   clearInterval(gameInterval);
   cancelAnimationFrame(loopId);
   
-  // Show YOU DIED screen
   deathScreen.classList.remove('hidden');
 
-  // Wait 2 seconds, then show the "Lose" screen
   setTimeout(() => {
     deathScreen.classList.add('hidden');
     lose();
@@ -323,11 +277,9 @@ function triggerDeath(){
 
 function lose(){
   playing = false;
-  
   gameScreen.classList.add('hidden');
   end.classList.remove('hidden');
   
-  // Reset Animations
   gojo.classList.remove('appear');
   gojo.classList.add('hidden');
   purple.classList.add('hidden');
@@ -342,7 +294,6 @@ function lose(){
   `;
 }
 
-// Global functions for the innerHTML buttons
 window.win = function(){
   start.classList.add('hidden');
   gameScreen.classList.add('hidden');
@@ -354,7 +305,6 @@ window.restartGame = function(){
   end.classList.add('hidden');
   gameScreen.classList.remove('hidden');
 
-  // Clean up old obstacles
   obstacles.forEach(o => o.remove());
   obstacles = [];
   passed = 0;
@@ -372,5 +322,6 @@ window.restartGame = function(){
   
   startGame();
 }
-// --- END OF CODE ---
- 
+</script>
+</body>
+</html>
