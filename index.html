@@ -147,6 +147,7 @@ noBtn.onclick=()=>{
   if(noCount >= 14){
     start.classList.add('hidden');
     game.classList.remove('hidden');
+    enableControls();
     startGame();
   }
 };
@@ -157,8 +158,15 @@ let y=0,vy=0,gravity=0.6;
 let obstacles=[];let passed=0;let playing=true;
 
 function jump(){if(y===0)vy=12}
-document.body.addEventListener('click',jump);
-document.body.addEventListener('touchstart',jump);
+// Jump controls will be enabled only after game starts
+let controlsEnabled = false;
+function enableControls(){
+  if(controlsEnabled) return;
+  controlsEnabled = true;
+  document.body.addEventListener('click', jump);
+  document.body.addEventListener('touchstart', jump);
+}
+
 
 function startGame(){
   setInterval(spawnObstacle,1700);
