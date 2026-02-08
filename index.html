@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Valentine Game</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
@@ -11,7 +11,7 @@
     background: #ffffff;
     color: #000000;
     overflow: hidden;
-    touch-action: manipulation;
+    touch-action: manipulation; /* Improves mobile touch response */
   }
   .screen {
     z-index: 1;
@@ -23,7 +23,7 @@
     align-items: center;
     text-align: center;
     padding: 20px;
-    background: white;
+    background: white; /* Ensure background covers elements behind */
   }
   .hidden { display: none !important; }
   button {
@@ -53,6 +53,7 @@
     bottom: 80px;
     left: 40px;
     width: 60px;
+    /* Added height just in case image fails to load so you see the box */
     height: 60px; 
     object-fit: contain;
   }
@@ -77,52 +78,23 @@
     right: 20px;
     font-weight: bold;
   }
-
-  /* --- GOJO & PURPLE ANIMATION STYLES --- */
   #gojo {
     position: absolute;
-    right: -300px;  /* Start OFF SCREEN (Hidden) */
-    bottom: 80px;   
-    width: 160px;   
-    z-index: 100;   
-    
-    /* SLIDE ANIMATION SETUP */
-    transition: right 1s ease-out; /* Smooth slide speed */
-    pointer-events: none;
+    right: -200px;
+    bottom: 130px;
+    width: 140px;
+    opacity: 0;
+    transition: right 0.8s ease, opacity 0.8s ease;
+    z-index: 6;
   }
-  
-  /* Class to trigger the slide in */
-  #gojo.appear {
-    right: 20px; /* End position (On Screen) */
-  }
-
   #purple {
     position: absolute;
-    width: 60px;
-    height: 60px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
-    background: radial-gradient(circle, #fff, #800080, #4b004b);
-    box-shadow: 0 0 20px 10px purple;
-    filter: blur(2px);
-    z-index: 101; 
-    opacity: 0;   
-    pointer-events: none;
-  }
-
-  /* --- NEW DEATH MESSAGE STYLE --- */
-  #deathMsg {
-    position: absolute;
-    inset: 0;
-    background: black;
-    color: red;
-    display: none; /* Hidden by default */
-    justify-content: center;
-    align-items: center;
-    font-size: 4rem;
-    font-weight: bold;
-    z-index: 9999; /* Highest priority */
-    text-shadow: 0 0 20px darkred;
-    font-family: 'Courier New', Courier, monospace;
+    background: purple;
+    filter: blur(6px);
+    z-index: 7;
   }
 </style>
 </head>
@@ -142,10 +114,8 @@
   <div id="ground"></div>
 </div>
 
-<img id="gojo" src="gojo.png" alt="Gojo">
-<div id="purple"></div>
-
-<div id="deathMsg">YOU DIED</div>
+<img id="gojo" src="gojo.png" class="hidden">
+<div id="purple" class="hidden"></div>
 
 <div id="end" class="screen hidden" style="z-index:15"></div>
 
@@ -158,39 +128,34 @@ const noBtn = document.getElementById('noBtn');
 const jerry = document.getElementById('jerry');
 const gojo = document.getElementById('gojo');
 const purple = document.getElementById('purple');
-const deathMsg = document.getElementById('deathMsg'); // Get death msg element
 
 let noCount = 0;
 let y = 0, vy = 0;
 let obstacles = [];
 let passed = 0;
 let playing = false;
-let gameInterval, loopId, blastInterval;
+let gameInterval;
+let loopId;
 
-// Yes Button
-yesBtn.onclick = () => win();
+// Yes Button Logic
+yesBtn.onclick = (e) => {
+  e.stopPropagation();
+  win();
+};
 
-// No Button
+// No Button Logic
 noBtn.onclick = (e) => {
   e.stopPropagation();
   noCount++;
-  noBtn.style.transform = `scale(${Math.max(0.6, 1 - noCount * 0.05)})`;
-  yesBtn.style.transform = `scale(${Math.min(1.5, 1 + noCount * 0.05)})`;
+  noBtn.style.transform = `scale(${Math.max(0.2, 1 - noCount * 0.06)})`;
+  yesBtn.style.transform = `scale(${1 + noCount * 0.08})`;
   
-  if(noCount >= 10){
+  if(noCount >= 14){
     start.classList.add('hidden');
     gameScreen.classList.remove('hidden');
     startGame();
   }
 };
-
-// Jump Logic
-function jump(e) {
-    if(e && e.cancelable) e.preventDefault();
-    if(playing && y < 5) vy = 15; 
-}
-gameScreen.addEventListener('click', jump);
-gameScreen.addEventListener('touchstart', jump, {passive: false});
 
 function startGame(){
   playing = true;
