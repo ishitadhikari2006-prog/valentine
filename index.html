@@ -11,7 +11,8 @@
     background: #ffffff;
     color: #000000;
     overflow: hidden;
-    touch-action: manipulation;
+    touch-action: none; /* Critical fix for mobile */
+    user-select: none;
   }
   .screen {
     z-index: 1;
@@ -77,36 +78,47 @@
     right: 20px;
     font-weight: bold;
   }
-
-  /* --- GOJO & PURPLE ANIMATION STYLES --- */
+  
+  /* GOJO SLIDE ANIMATION */
   #gojo {
     position: absolute;
-    right: -300px;  /* Start OFF SCREEN (Hidden) */
-    bottom: 80px;   
-    width: 160px;   
-    z-index: 100;   
-    
-    /* SLIDE ANIMATION SETUP */
-    transition: right 1s ease-out; /* Smooth slide speed */
-    pointer-events: none;
+    right: -300px; /* Start hidden off screen */
+    bottom: 130px;
+    width: 140px;
+    opacity: 0;
+    transition: right 1s ease-out, opacity 0.5s; /* Smooth slide */
+    z-index: 6;
+  }
+  /* Class to trigger slide */
+  #gojo.appear {
+    right: 20px;
+    opacity: 1;
   }
   
-  /* Class to trigger the slide in */
-  #gojo.appear {
-    right: 20px; /* End position (On Screen) */
-  }
-
   #purple {
     position: absolute;
-    width: 60px;
-    height: 60px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
-    background: radial-gradient(circle, #fff, #800080, #4b004b);
-    box-shadow: 0 0 20px 10px purple;
-    filter: blur(2px);
-    z-index: 101; 
-    opacity: 0;   
-    pointer-events: none;
+    background: purple;
+    filter: blur(6px);
+    z-index: 7;
+  }
+
+  /* YOU DIED SCREEN */
+  #deathScreen {
+    position: absolute;
+    inset: 0;
+    background: black;
+    color: red;
+    z-index: 999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 4rem;
+    font-weight: bold;
+    font-family: 'Courier New', Courier, monospace;
+    text-shadow: 0 0 10px darkred;
   }
 </style>
 </head>
@@ -122,199 +134,5 @@
 
 <div id="game" class="screen hidden" style="z-index:5">
   <div id="title">RUN LITTLE MOUSE RUN</div>
-  <img id="jerry" src="jerry.png" alt="Jerry">
-  <div id="ground"></div>
-</div>
-
-<img id="gojo" src="gojo.png" alt="Gojo">
-<div id="purple"></div>
-
-<div id="end" class="screen hidden" style="z-index:15"></div>
-
-<script>
-const start = document.getElementById('start');
-const gameScreen = document.getElementById('game');
-const end = document.getElementById('end');
-const yesBtn = document.getElementById('yesBtn');
-const noBtn = document.getElementById('noBtn');
-const jerry = document.getElementById('jerry');
-const gojo = document.getElementById('gojo');
-const purple = document.getElementById('purple');
-
-let noCount = 0;
-let y = 0, vy = 0;
-let obstacles = [];
-let passed = 0;
-let playing = false;
-let gameInterval, loopId, blastInterval;
-
-// Yes Button
-yesBtn.onclick = () => win();
-
-// No Button
-noBtn.onclick = (e) => {
-  e.stopPropagation();
-  noCount++;
-  noBtn.style.transform = `scale(${Math.max(0.6, 1 - noCount * 0.05)})`;
-  yesBtn.style.transform = `scale(${Math.min(1.5, 1 + noCount * 0.05)})`;
-  
-  if(noCount >= 10){
-    start.classList.add('hidden');
-    gameScreen.classList.remove('hidden');
-    startGame();
-  }
-};
-
-// Jump Logic
-function jump(e) {
-    if(e && e.cancelable) e.preventDefault();
-    if(playing && y < 5) vy = 15; 
-}
-gameScreen.addEventListener('click', jump);
-gameScreen.addEventListener('touchstart', jump, {passive: false});
-
-function startGame(){
-  playing = true;
-  y = 0; vy = 0;
-  passed = 0;
-  jerry.style.bottom = '80px';
-  obstacles = [];
-  
-  gameInterval = setInterval(spawnObstacle, 1300);
-  loopId = requestAnimationFrame(loop);
-}
-
-function spawnObstacle(){
-  if(!playing) return;
-  const o = document.createElement('div');
-  o.className = 'obstacle';
-  o.style.left = (window.innerWidth + 50) + 'px'; 
-  gameScreen.appendChild(o);
-  obstacles.push(o);
-}
-
-function loop(){
-  if(!playing) return;
-  
-  vy -= 0.7; 
-  y += vy;
-  if(y < 0) { y = 0; vy = 0; }
-  jerry.style.bottom = (80 + y) + 'px';
-
-  obstacles.forEach((o, i) => {
-    o.style.left = (o.offsetLeft - 6) + 'px';
-    
-    // Collision
-    if(o.offsetLeft < 90 && o.offsetLeft > 40 && y < 55){
-      showLoseScreen(); 
-    }
-    
-    // Pass count
-    if(o.offsetLeft < -50){
-      o.remove();
-      obstacles.splice(i, 1);
-      passed++;
-      if(passed === 12) finishSequence();
-    }
-  });
-  
-  loopId = requestAnimationFrame(loop);
-}
-
-function finishSequence(){
-  playing = false;
-  clearInterval(gameInterval);
-  cancelAnimationFrame(loopId);
-
-  // 1. Show Finish Line Text
-  const f = document.createElement('div');
-  f.id = 'finish';
-  gameScreen.appendChild(f);
-  
-  const t = document.createElement('div');
-  t.id = 'finishText';
-  t.innerText = "No I don't!";
-  gameScreen.appendChild(t);
-
-  // 2. SLIDE Gojo In (Trigger CSS Transition)
-  setTimeout(() => {
-    gojo.classList.add('appear'); 
-  }, 200);
-
-  // 3. WAIT (1.5s) then throw Hollow Purple
-  setTimeout(() => {
-    firePurple();
-  }, 1500);
-}
-
-function firePurple(){
-    purple.style.opacity = '1';
-    purple.style.right = '140px'; 
-    purple.style.bottom = '150px';
-    purple.classList.remove('hidden');
-
-    let purplePos = window.innerWidth - 140; 
-
-    blastInterval = setInterval(() => {
-        purplePos -= 15; 
-        purple.style.left = purplePos + 'px';
-
-        if(purplePos < 80){
-            clearInterval(blastInterval);
-            jerry.classList.add('hidden');
-            purple.classList.add('hidden');
-            setTimeout(showLoseScreen, 500);
-        }
-    }, 16);
-}
-
-function showLoseScreen(){
-  playing = false;
-  clearInterval(gameInterval);
-  cancelAnimationFrame(loopId);
-  if(blastInterval) clearInterval(blastInterval);
-
-  gameScreen.classList.add('hidden');
-  end.classList.remove('hidden');
-  
-  // Reset for next round
-  gojo.classList.remove('appear'); 
-  purple.style.opacity = '0';
-  
-  end.innerHTML = `
-    <h2 style="color:#ff5fa2; margin-bottom:20px;">Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️</h2>
-    <div class="buttons">
-      <button onclick="win()" style="background:#ff5fa2; color:fff;">YES!</button>
-      <button onclick="restartGame()" style="background:#444; color:fff;">Try Again</button>
-    </div>
-  `;
-}
-
-window.win = function(){
-  start.classList.add('hidden');
-  gameScreen.classList.add('hidden');
-  end.classList.remove('hidden');
-  end.innerHTML = "<h2 style='color:#ff5fa2; font-size:2rem;'>YAY! <br>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
-}
-
-window.restartGame = function(){
-  end.classList.add('hidden');
-  gameScreen.classList.remove('hidden');
-  
-  obstacles.forEach(o => o.remove());
-  obstacles = [];
-  document.getElementById('finish')?.remove();
-  document.getElementById('finishText')?.remove();
-  
-  jerry.classList.remove('hidden');
-  purple.classList.remove('hidden'); 
-  purple.style.opacity = '0'; 
-  
-  gojo.classList.remove('appear');
-  
-  noCount = 10; 
-  startGame();
-}
-</script>
-</body>
-</html>
+  <img id
+   
