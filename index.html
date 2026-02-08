@@ -68,7 +68,12 @@ button{
 #end h2{font-weight:400;margin-bottom:24px}
 </style></head>
 <body><!-- START --><div id="start" class="screen">
-  <h1>Nandini, would you like to be my Valentine?<br><span style="font-size:1.1rem;opacity:0.9">Do you accept your bf is always right in every argument and you wanna be his Valentine 😼❤️</span></h1>
+  <h1>
+    Nandini, would you like to be my Valentine?<br>
+    <span style="font-size:1.05rem;opacity:0.9">
+      Do you accept your bf is always right in every argument and you wanna be his Valentine 😼❤️
+    </span>
+  </h1>
   <div class="buttons">
     <button id="yesBtn">YES</button>
     <button id="noBtn">NO</button>
@@ -93,7 +98,7 @@ yesBtn.onclick=()=>showEnding(true);
 
 noBtn.onclick=()=>{
   noCount++;
-  let noScale=Math.max(0.5,1-noCount*0.04);
+  let noScale=Math.max(0.5,1-noCount*0.035);
   let yesScale=1+noCount*0.05;
   noBtn.style.transform=`scale(${noScale})`;
   yesBtn.style.transform=`scale(${yesScale})`;
@@ -135,7 +140,12 @@ function loop(){
   obstacles.forEach((o,i)=>{
     let x=o.offsetLeft-4;o.style.left=x+'px';
     if(x<110 && x>50 && y<55) endGame(false);
-    if(x<-40){o.remove();obstacles.splice(i,1);passed++;if(passed===14)finish()}
+    if(x<-40){
+      o.remove();
+      obstacles.splice(i,1);
+      passed++;
+      if(passed===14)finish();
+    }
   });
   requestAnimationFrame(loop);
 }
@@ -143,33 +153,40 @@ function loop(){
 function finish(){
   playing=false;
   const finish=document.createElement('div');
-  finish.id='finish';game.appendChild(finish);
+  finish.id='finish';
+  game.appendChild(finish);
   setTimeout(gojoAttack,600);
 }
 
 function gojoAttack(){
   const gojo=document.getElementById('gojo');
   const purple=document.getElementById('purple');
-  gojo.classList.remove('hidden');purple.classList.remove('hidden');
+  gojo.classList.remove('hidden');
+  purple.classList.remove('hidden');
   gojo.style.right='20px';
   let pX=window.innerWidth-200;
   const blast=setInterval(()=>{
-    pX-=15;purple.style.left=pX+'px';
-    if(pX<80){clearInterval(blast);endGame(true)}
+    pX-=15;
+    purple.style.left=pX+'px';
+    if(pX<80){
+      clearInterval(blast);
+      endGame(true);
+    }
   },16);
 }
 
 function endGame(win){
-  playing=false;game.classList.add('hidden');
+  playing=false;
+  game.classList.add('hidden');
   showEnding(win);
 }
 
 function showEnding(win){
   document.getElementById('end').classList.remove('hidden');
   document.getElementById('endText').innerHTML=
-    win?
-    "Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️<br><br>You are officially the Valentine of Mr. Ishit 💖":
-    "Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️<br><br>Or do you want to restart the game?";
+    win
+    ? "Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️<br><br>You are officially the Valentine of Mr. Ishit 💖"
+    : "Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️<br><br>Or do you want to restart the game?";
 }
 </script></body>
 </html>
