@@ -11,7 +11,7 @@
     background: #ffffff;
     color: #000000;
     overflow: hidden;
-    touch-action: none; /* Prevents scrolling on mobile */
+    touch-action: none; /* Critical for mobile controls */
     user-select: none;
   }
   .screen {
@@ -87,10 +87,11 @@
     bottom: 130px;
     width: 140px;
     opacity: 0;
-    transition: right 1s ease-out, opacity 0.5s; /* Smooth Slide */
+    /* This transition makes him SLIDE in */
+    transition: right 1.2s ease-out, opacity 0.5s; 
     z-index: 6;
   }
-  /* The class that triggers the slide */
+  /* Class to trigger the slide */
   #gojo.appear {
     right: 20px;
     opacity: 1;
@@ -223,7 +224,7 @@ function loop(){
   obstacles.forEach((o, i) => {
     o.style.left = (o.offsetLeft - 5) + 'px';
     
-    // Collision Detection (Hit Obstacle) -> Triggers Death
+    // Collision Detection (Hit Wall) -> Triggers Death
     if(o.offsetLeft < 90 && o.offsetLeft > 40 && y < 50){
       triggerDeath();
     }
@@ -266,6 +267,7 @@ function finish(){
   t.innerText = "No I don't";
   gameScreen.appendChild(t);
   
+  // Gojo comes in after 0.5s
   setTimeout(gojoAttack, 500);
 }
 
@@ -273,11 +275,12 @@ function gojoAttack(){
   gojo.classList.remove('hidden');
   
   // 1. SLIDE IN
+  // Small timeout ensures CSS transition catches the change
   setTimeout(() => {
     gojo.classList.add('appear');
   }, 50);
 
-  // 2. WAIT, THEN THROW
+  // 2. WAIT 1.5s, THEN THROW
   setTimeout(() => {
       purple.classList.remove('hidden');
       
