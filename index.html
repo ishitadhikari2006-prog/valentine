@@ -100,8 +100,25 @@ function loop(){
 
 function finish(){
   playing=false;
-  const f=document.createElement('div'); f.id='finish'; game.appendChild(f);
+  const f=document.createElement('div');
+  f.id='finish';
+  f.style.position='absolute';
+  f.style.bottom='70px';
+  f.style.right='40px';
+
+  const label=document.createElement('div');
+  label.innerText='Option NO';
+  label.style.position='absolute';
+  label.style.bottom='90px';
+  label.style.right='30px';
+  label.style.fontSize='0.9rem';
+  label.style.color='#000';
+
+  game.appendChild(f);
+  game.appendChild(label);
+
   setTimeout(gojoAttack,600);
+}
 }
 
 function gojoAttack(){
