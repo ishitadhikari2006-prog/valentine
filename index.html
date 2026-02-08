@@ -195,43 +195,55 @@ function finish(){
   setTimeout(gojoSlideIn,800);
 }
 
-// --- Gojo Slide & Purple ---
+// --- Gojo Slide & Throw ---
 function gojoSlideIn(){
   gojo.classList.remove('hidden');
-  gojo.style.opacity='1';
-  gojo.style.right='20px';
 
-  // wait 1s then throw purple
+  // Calculate position beside finish line so he doesn't cover text
+  const finishLine=document.getElementById('finish');
+  const finishRight=finishLine.getBoundingClientRect().right;
+  const stopRight=finishRight + 80; // Gojo stops 80px left from finish line
+
+  gojo.style.opacity='1';
+  gojo.style.right=`${window.innerWidth - stopRight}px`; // slide in
+
+  // Wait 1 second then throw purple
   setTimeout(()=>{
     purple.classList.remove('hidden');
     purple.style.bottom='150px';
-    let x=window.innerWidth-200;
+    let x=window.innerWidth - stopRight - 140; // start from Gojo's position
     blastInterval=setInterval(()=>{
       x-=15;
       purple.style.left=x+'px';
       if(x<80 && y<50){
         clearInterval(blastInterval);
-        lose();
+        showEndButtons();
       }
     },16);
   },1000);
 }
 
-// --- Lose ---
-function lose(){
-  playing=false;
-  clearInterval(gameInterval);
-  cancelAnimationFrame(loopId);
-  clearInterval(blastInterval);
-
+// --- Show YES & RESTART after hit ---
+function showEndButtons(){
   game.classList.add('hidden');
   end.classList.remove('hidden');
   gojo.classList.add('hidden');
   purple.classList.add('hidden');
 
   end.innerHTML=`<h2>Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️</h2><br>
-  <button onclick="win()">YES</button>
-  <button onclick="restartGame()">RESTART</button>`;
+  <div class="buttons">
+    <button onclick="win()" style="background:#ff5fa2;color:#fff;">YES</button>
+    <button onclick="restartGame()" style="background:#444;color:#fff;">RESTART</button>
+  </div>`;
+}
+
+// --- Lose (collision with obstacles) ---
+function lose(){
+  playing=false;
+  clearInterval(gameInterval);
+  cancelAnimationFrame(loopId);
+  clearInterval(blastInterval);
+  showEndButtons();
 }
 
 // --- Win ---
