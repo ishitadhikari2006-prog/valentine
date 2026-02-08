@@ -1,283 +1,255 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Valentine Game</title>
-<style>
-  /* --- RESET & BASIC SETUP --- */
-  *{margin:0;padding:0;box-sizing:border-box;}
-  body{font-family:Arial,sans-serif;background:#fff;color:#000;overflow:hidden;}
-  .screen{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px;}
-  .hidden{display:none !important;}
+<!DOCTYPE html>  
+<html lang="en">  
+<head>  
+<meta charset="UTF-8">  
+<meta name="viewport" content="width=device-width, initial-scale=1.0">  
+<title>Valentine Game</title>  
+<style>  
+  /* --- RESET & BASIC SETUP --- */  
+  *{margin:0;padding:0;box-sizing:border-box;}  
+  body{font-family:Arial,sans-serif;background:#fff;color:#000;overflow:hidden;}  
+  .screen{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px;}  
+  .hidden{display:none !important;}  
     
-  /* --- BUTTONS --- */
-  button{padding:16px 36px;font-size:1.2rem;border:none;border-radius:14px;cursor:pointer; transition: transform 0.2s;}
-  #yesBtn{background:#ff5fa2;color:#fff;}
-  #noBtn{background:#444;color:#fff;}
-  .buttons{display:flex;gap:20px;margin-top:30px;}
+  /* --- BUTTONS --- */  
+  button{padding:16px 36px;font-size:1.2rem;border:none;border-radius:14px;cursor:pointer; transition: transform 0.2s;}  
+  #yesBtn{background:#ff5fa2;color:#fff;}  
+  #noBtn{background:#444;color:#fff;}  
+  .buttons{display:flex;gap:20px;margin-top:30px;}  
     
-  /* --- GAME ELEMENTS --- */
-  #game{justify-content:flex-start;}
-  #title{margin-top:20px;font-size:1.3rem;font-weight:bold;}
-  #ground{position:absolute;bottom:80px;width:100%;height:4px;background:#aaa;}
+  /* --- GAME ELEMENTS --- */  
+  #game{justify-content:flex-start;}  
+  #title{margin-top:20px;font-size:1.3rem;font-weight:bold;}  
+  #ground{position:absolute;bottom:80px;width:100%;height:4px;background:#aaa;}  
     
-  /* CHARACTERS */
-  #jerry{position:absolute;bottom:80px;left:40px;width:60px; z-index: 2;}
-  .obstacle{position:absolute;bottom:80px;width:20px;height:60px;background:#ff5fa2;}
+  /* CHARACTERS */  
+  #jerry{position:absolute;bottom:80px;left:40px;width:60px; z-index: 2;}  
+  .obstacle{position:absolute;bottom:80px;width:20px;height:60px;background:#ff5fa2;}  
     
-  /* FINISH WALL */
-  #finish{position:absolute;bottom:80px;right:40px;width:6px;height:90px;background:black;}
-  #finishText{position:absolute;bottom:180px;right:20px;font-weight:bold;}
-
-  /* --- GOJO & ANIMATION STYLES --- */
-  #gojo {
-    position: absolute;
-    bottom: 80px;
-    right: -300px; /* Starts off-screen */
-    width: 140px;
-    z-index: 3;
+  /* FINISH WALL */  
+  #finish{position:absolute;bottom:80px;right:40px;width:6px;height:90px;background:black;}  
+  #finishText{position:absolute;bottom:180px;right:20px;font-weight:bold;}  
+  
+  /* --- GOJO & ANIMATION STYLES --- */  
+  #gojo {  
+    position: absolute;  
+    bottom: 80px;  
+    right: -300px; /* Starts off-screen */  
+    width: 140px;  
+    z-index: 3;  
     transition: right 1.5s cubic-bezier(0.25, 0.8, 0.25, 1);   
-  }
+  }  
+  
+  #purple {  
+    position: absolute;  
+    width: 40px;  
+    height: 40px;  
+    background: purple;  
+    border-radius: 50%;  
+    filter: blur(4px);  
+    box-shadow: 0 0 20px 10px rgba(128, 0, 128, 0.7);  
+    z-index: 4;  
+    display: none;  
+  }  
+</style>  
+</head>  
+<body>  
 
-  #purple {
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    background: purple;
-    border-radius: 50%;
-    filter: blur(4px);
-    box-shadow: 0 0 20px 10px rgba(128, 0, 128, 0.7);
-    z-index: 4;
-    display: none; /* Hidden until thrown */
-  }
-
-  /* --- VIDEO --- */
-  #introVideoContainer {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: #000;
-    z-index: 20;
-  }
-  #introVideo {
-    max-width: 100%;
-    max-height: 100%;
-  }
-
-</style>
-</head>
-<body>
-
-<!-- START SCREEN -->
-<div id="start" class="screen">
-  <h2>Do you accept your bf is always right in every argument and you wanna be his Valentine 😼❤️</h2>
-  <div class="buttons">
-    <button id="yesBtn">YES</button>
-    <button id="noBtn">NO</button>
-  </div>
-</div>
-
-<!-- GAME SCREEN -->
-<div id="game" class="screen hidden">
-  <div id="title">RUN LITTLE MOUSE RUN</div>
-  <img id="jerry" src="jerry.png">
-  <div id="ground"></div>
-</div>
-
-<!-- GOJO & PURPLE -->
-<img id="gojo" src="gojo.png">
-<div id="purple"></div>
-
-<!-- VIDEO CONTAINER (hidden initially) -->
-<div id="introVideoContainer" class="hidden">
-  <video id="introVideo" autoplay>
+<!-- INTRO VIDEO SCREEN -->
+<div id="videoScreen" class="screen hidden">
+  <video id="introVideo" width="100%" autoplay>
     <source src="intro.mp4" type="video/mp4">
     Your browser does not support the video tag.
   </video>
 </div>
 
-<!-- END SCREEN -->
-<div id="end" class="screen hidden"></div>
+<!-- START SCREEN -->
+<div id="start" class="screen">  
+  <h2>Do you accept your bf is always right in every argument and you wanna be his Valentine 😼❤️</h2>  
+  <div class="buttons">  
+    <button id="yesBtn">YES</button>  
+    <button id="noBtn">NO</button>  
+  </div>  
+</div>  
 
-<script>
-const start = document.getElementById('start');
-const game = document.getElementById('game');
-const end = document.getElementById('end');
-const yesBtn = document.getElementById('yesBtn');
-const noBtn = document.getElementById('noBtn');
-const jerry = document.getElementById('jerry');
-const gojo = document.getElementById('gojo');
-const purple = document.getElementById('purple');
+<!-- GAME SCREEN -->
+<div id="game" class="screen hidden">  
+  <div id="title">RUN LITTLE MOUSE RUN</div>  
+  <img id="jerry" src="jerry.png">  
+  <div id="ground"></div>  
+</div>  
 
-const introVideoContainer = document.getElementById('introVideoContainer');
-const introVideo = document.getElementById('introVideo');
+<img id="gojo" src="gojo.png">  
+<div id="purple"></div>  
+<div id="end" class="screen hidden"></div>  
 
-let noCount=0, y=0, vy=0, obstacles=[], passed=0, playing=false;
-let gameInterval, loopId, purpleInterval;
+<script>  
+const start = document.getElementById('start');  
+const game = document.getElementById('game');  
+const end = document.getElementById('end');  
+const yesBtn = document.getElementById('yesBtn');  
+const noBtn = document.getElementById('noBtn');  
+const jerry = document.getElementById('jerry');  
+const gojo = document.getElementById('gojo');  
+const purple = document.getElementById('purple');  
+const videoScreen = document.getElementById('videoScreen');  
+const introVideo = document.getElementById('introVideo');  
 
-// --- INITIAL YES BUTTON ---
-yesBtn.onclick = () => {
-  start.classList.add('hidden');
-  end.classList.remove('hidden');
-  end.innerHTML="<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
-};
+let noCount=0, y=0, vy=0, obstacles=[], passed=0, playing=false;  
+let gameInterval, loopId, purpleInterval;  
 
-// --- INITIAL NO BUTTON ---
-noBtn.onclick = () => {
-  noCount++;
-  noBtn.style.transform = `scale(${Math.max(0.2,1-noCount*0.06)})`;
-  yesBtn.style.transform = `scale(${1+noCount*0.08})`;
+// --- YES BUTTON ---  
+yesBtn.onclick = () => {  
+  start.classList.add('hidden');  
+  end.classList.remove('hidden');  
+  end.innerHTML="<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";  
+};  
 
-  if(noCount===14){
-    // --- Play intro video ---
-    introVideoContainer.classList.remove('hidden');
-    introVideo.currentTime = 0;
-    introVideo.play();
+// --- NO BUTTON ---  
+noBtn.onclick = () => {  
+  noCount++;    
+  noBtn.style.transform = `scale(${Math.max(0.2,1-noCount*0.06)})`;  
+  yesBtn.style.transform = `scale(${1+noCount*0.08})`;  
 
-    introVideo.onended = () => {
-      introVideoContainer.classList.add('hidden');
-      start.classList.add('hidden');
-      game.classList.remove('hidden');
-      startGame();
-    }
+  if(noCount===14){  
+    // Hide start, show video
+    start.classList.add('hidden');  
+    videoScreen.classList.remove('hidden');  
+    introVideo.play();  
 
-    return; // stop here, do not start game immediately
-  }
-};
+    // When video ends -> start game
+    introVideo.onended = () => {  
+      videoScreen.classList.add('hidden');  
+      game.classList.remove('hidden');  
+      startGame();  
+    };  
+  }  
+};  
 
-// --- GAME LOGIC ---
-function startGame(){
-  playing=true;
-  gameInterval=setInterval(spawnObstacle,1500);
-  loopId=requestAnimationFrame(loop);
-}
+// --- GAME LOGIC ---  
+function startGame(){  
+  playing=true;  
+  gameInterval=setInterval(spawnObstacle,1500);   
+  loopId=requestAnimationFrame(loop);  
+}  
 
-function spawnObstacle(){
-  if(!playing) return;
-  const o = document.createElement('div');
-  o.className = 'obstacle';
-  o.style.left = '100%';
-  game.appendChild(o);
-  obstacles.push(o);
-}
+function spawnObstacle(){  
+  if(!playing) return;  
+  const o = document.createElement('div');  
+  o.className = 'obstacle';  
+  o.style.left = '100%';  
+  game.appendChild(o);  
+  obstacles.push(o);  
+}  
 
-function loop(){
-  if(!playing) return;
-    
-  // Gravity
-  vy -= 0.6;
-  y += vy;
-  if(y<0){y=0; vy=0;}
-  jerry.style.bottom = 80+y+'px';
+function loop(){  
+  if(!playing) return;  
+  vy -= 0.6;  
+  y += vy;  
+  if(y<0){y=0; vy=0;}  
+  jerry.style.bottom = 80+y+'px';  
 
-  // Obstacles
-  obstacles.forEach((o,i)=>{
-    let currentLeft = o.offsetLeft;
-    o.style.left = (currentLeft-5)+'px';
+  obstacles.forEach((o,i)=>{  
+    let currentLeft = o.offsetLeft;  
+    o.style.left = (currentLeft-5)+'px';  
 
-    // Collision (Loss)
-    if(currentLeft < 90 && currentLeft > 40 && y<50){
-        showFinalOptions();
-    }
+    if(currentLeft < 90 && currentLeft > 40 && y<50){  
+        showFinalOptions();  
+    }  
 
-    // Passed Obstacle
-    if(currentLeft<-30){
+    if(currentLeft<-30){  
         o.remove();   
         obstacles.splice(i,1);   
         passed++;   
-        if(passed===14) finish();
-    }
-  });
+        if(passed===14) finish();  
+    }  
+  });  
 
-  loopId=requestAnimationFrame(loop);
-}
+  loopId=requestAnimationFrame(loop);  
+}  
 
-// Jump
-game.onclick = ()=>{if(playing && y===0) vy=6;}; // updated jump height
+game.onclick = ()=>{if(playing && y===0) vy=6;}; // Jump height same as last code  
 
-// --- FINISH SEQUENCE ---
-function finish(){
-  playing=false;
-  clearInterval(gameInterval);
-  cancelAnimationFrame(loopId);
+// --- FINISH SEQUENCE ---  
+function finish(){  
+  playing=false;  
+  clearInterval(gameInterval);  
+  cancelAnimationFrame(loopId);  
 
-  const f = document.createElement('div');
-  f.id = 'finish';
-  game.appendChild(f);
-    
-  const t = document.createElement('div');
-  t.id = 'finishText';
-  t.innerText="No I don't";
-  game.appendChild(t);
+  const f = document.createElement('div');  
+  f.id = 'finish';  
+  game.appendChild(f);  
 
-  slideGojoIn();
-}
+  const t = document.createElement('div');  
+  t.id = 'finishText';  
+  t.innerText="No I don't";  
+  game.appendChild(t);  
 
-function slideGojoIn(){
-  gojo.style.right = '50px';
-  setTimeout(throwHollowPurple, 1500);
-}
+  slideGojoIn();  
+}  
 
-function throwHollowPurple(){
-  purple.style.display = 'block';
-  let startX = window.innerWidth - 150;
-  let currentX = startX;
-  purple.style.left = currentX + 'px';
-  purple.style.bottom = '140px';
+function slideGojoIn(){  
+  gojo.style.right = '50px';  
+  setTimeout(throwHollowPurple, 1500);  
+}  
 
-  purpleInterval = setInterval(() => {
-    currentX -= 15;
-    purple.style.left = currentX + 'px';
-    if(currentX < 80){
-      clearInterval(purpleInterval);
-      purple.style.display = 'none';
-      showFinalOptions();
-    }
-  }, 16);
-}
+function throwHollowPurple(){  
+  purple.style.display = 'block';  
+  let startX = window.innerWidth - 150;   
+  let currentX = startX;  
+  purple.style.left = currentX + 'px';  
+  purple.style.bottom = '140px';   
 
-// --- FINAL OPTIONS ---
-function showFinalOptions(){
-  playing=false;
-  clearInterval(gameInterval);
-  clearInterval(purpleInterval);
-  if(loopId) cancelAnimationFrame(loopId);
+  purpleInterval = setInterval(() => {  
+    currentX -= 15;   
+    purple.style.left = currentX + 'px';  
 
-  game.classList.add('hidden');
-  gojo.style.right = '-300px';
-  purple.style.display = 'none';
+    if(currentX < 80){  
+      clearInterval(purpleInterval);  
+      purple.style.display = 'none';   
+      showFinalOptions();  
+    }  
+  }, 16);  
+}  
 
-  end.classList.remove('hidden');
-  end.innerHTML = `<h2>Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️</h2>
-  <div class="buttons">
-    <button onclick="finalYes()" style="background:#ff5fa2;color:#fff;">YES</button>
-    <button onclick="restartGame()" style="background:#444;color:#fff;">RESTART</button>
-  </div>`;
-}
+function showFinalOptions(){  
+  playing=false;  
+  clearInterval(gameInterval);  
+  clearInterval(purpleInterval);  
+  if(loopId) cancelAnimationFrame(loopId);  
 
-window.finalYes = function(){
-    end.innerHTML="<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
-}
+  game.classList.add('hidden');  
+  gojo.style.right = '-300px';   
+  purple.style.display = 'none';  
 
-window.restartGame = function(){
-  end.classList.add('hidden');
-  game.classList.remove('hidden');
+  end.classList.remove('hidden');  
+  end.innerHTML = `<h2>Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️</h2>  
+  <div class="buttons">  
+    <button onclick="finalYes()" style="background:#ff5fa2;color:#fff;">YES</button>  
+    <button onclick="restartGame()" style="background:#444;color:#fff;">RESTART</button>  
+  </div>`;  
+}  
 
-  obstacles.forEach(o=>o.remove()); obstacles=[];
-  passed=0; y=0; vy=0;
+window.finalYes = function(){  
+  end.innerHTML="<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";  
+}  
 
-  const finishEl = document.getElementById('finish');
-  if(finishEl) finishEl.remove();
-  const finishText = document.getElementById('finishText');
-  if(finishText) finishText.remove();
+window.restartGame = function(){  
+  end.classList.add('hidden');  
+  game.classList.remove('hidden');  
 
-  gojo.style.right='-300px';
+  obstacles.forEach(o=>o.remove()); obstacles=[];  
+  passed=0; y=0; vy=0;  
 
-  startGame();
-}
-</script>
-</body>
+  const finishEl = document.getElementById('finish');  
+  if(finishEl) finishEl.remove();  
+  const finishText = document.getElementById('finishText');  
+  if(finishText) finishText.remove();  
+
+  gojo.style.right='-300px';   
+
+  startGame();  
+}  
+</script>  
+</body>  
 </html>
