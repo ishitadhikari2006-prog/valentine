@@ -139,11 +139,12 @@ yesBtn.onclick=()=>{
 
 noBtn.onclick=()=>{
   noCount++;
-  const noScale=Math.max(0.25,1-noCount*0.06);
-  const yesScale=1+noCount*0.08;
-  noBtn.style.transform=`scale(${noScale})`;
-  yesBtn.style.transform=`scale(${yesScale})`;
-  if(noCount===14){
+  const noScale = Math.max(0.15, 1 - noCount * 0.06);
+  const yesScale = 1 + noCount * 0.08;
+  noBtn.style.transform = `scale(${noScale})`;
+  yesBtn.style.transform = `scale(${yesScale})`;
+
+  if(noCount >= 14){
     start.classList.add('hidden');
     game.classList.remove('hidden');
     startGame();
