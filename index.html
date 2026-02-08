@@ -13,28 +13,34 @@ body{
 
 .screen{
   position:absolute;
-  width:100%;
-  height:100%;
+  inset:0;
   display:flex;
   flex-direction:column;
   justify-content:center;
   align-items:center;
   text-align:center;
+  padding:24px;
 }
 .hidden{display:none}
 
 /* START SCREEN */
 #start h1{
-  font-size:2rem;
+  font-size:1.6rem;
   font-weight:500;
-  margin-bottom:40px;
+  line-height:1.4;
+  margin-bottom:28px;
 }
-.buttons{display:flex;gap:24px}
+#start p{
+  font-size:1.05rem;
+  opacity:0.9;
+  margin-bottom:34px;
+}
+.buttons{display:flex;gap:20px}
 button{
-  padding:16px 38px;
+  padding:18px 44px;
   font-size:1.2rem;
   border:none;
-  border-radius:14px;
+  border-radius:16px;
   cursor:pointer;
 }
 #yesBtn{background:#ff5fa2;color:#fff}
@@ -42,47 +48,77 @@ button{
 
 /* GAME */
 #game{justify-content:flex-start}
-#title{margin:14px;font-size:1.2rem;letter-spacing:1px}
+#title{
+  margin-top:18px;
+  font-size:1.2rem;
+  letter-spacing:1px;
+}
 #ground{
-  position:absolute;bottom:50px;width:100%;height:4px;background:#aaa
+  position:absolute;
+  bottom:70px;
+  width:100%;
+  height:4px;
+  background:#aaa
 }
 #jerry{
-  position:absolute;bottom:50px;left:50px;width:60px
+  position:absolute;
+  bottom:70px;
+  left:40px;
+  width:60px
 }
 .obstacle{
-  position:absolute;bottom:50px;width:28px;height:60px;background:#ff5fa2
+  position:absolute;
+  bottom:70px;
+  width:22px;
+  height:60px;
+  background:#ff5fa2
 }
 #finish{
-  position:absolute;bottom:50px;right:40px;width:10px;height:80px;background:#fff
+  position:absolute;
+  bottom:70px;
+  right:40px;
+  width:10px;
+  height:80px;
+  background:#fff
 }
 
 #gojo{
-  position:absolute;right:-200px;bottom:90px;width:160px;transition:0.8s
+  position:absolute;
+  right:-220px;
+  bottom:120px;
+  width:160px;
+  transition:0.8s
 }
 #purple{
-  position:absolute;right:200px;bottom:130px;width:30px;height:30px;
-  border-radius:50%;background:#a855f7;filter:blur(4px);
+  position:absolute;
+  right:200px;
+  bottom:150px;
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  background:#a855f7;
+  filter:blur(6px);
 }
 
 /* END */
-#end h2{font-weight:400;margin-bottom:24px}
+#end h2{
+  font-weight:400;
+  line-height:1.5;
+  margin-bottom:30px
+}
 </style></head>
 <body><!-- START --><div id="start" class="screen">
-  <h1>
-    Nandini, would you like to be my Valentine?<br>
-    <span style="font-size:1.05rem;opacity:0.9">
-      Do you accept your bf is always right in every argument and you wanna be his Valentine 😼❤️
-    </span>
-  </h1>
+  <h1>Nandini, would you like to be my Valentine?</h1>
+  <p>Do you accept your bf is always right in every argument and you wanna be his Valentine 😼❤️</p>
   <div class="buttons">
     <button id="yesBtn">YES</button>
     <button id="noBtn">NO</button>
   </div>
 </div><!-- GAME --><div id="game" class="screen hidden">
   <div id="title">RUN LITTLE MOUSE RUN</div>
-  <img id="jerry" src="jerry.png">
+  <img id="jerry" src="jerry.png" alt="Jerry">
   <div id="ground"></div>
-</div><img id="gojo" src="gojo.png" class="hidden">
+</div><img id="gojo" src="gojo.png" class="hidden" alt="Gojo">
 <div id="purple" class="hidden"></div><!-- END --><div id="end" class="screen hidden">
   <h2 id="endText"></h2>
   <button onclick="location.reload()">Restart</button>
@@ -98,8 +134,8 @@ yesBtn.onclick=()=>showEnding(true);
 
 noBtn.onclick=()=>{
   noCount++;
-  let noScale=Math.max(0.5,1-noCount*0.035);
-  let yesScale=1+noCount*0.05;
+  const noScale=Math.max(0.25,1-noCount*0.06);
+  const yesScale=1+noCount*0.08;
   noBtn.style.transform=`scale(${noScale})`;
   yesBtn.style.transform=`scale(${yesScale})`;
   if(noCount===14){
@@ -114,12 +150,12 @@ const jerry=document.getElementById('jerry');
 let y=0,vy=0,gravity=0.6;
 let obstacles=[];let passed=0;let playing=true;
 
-document.body.onclick=jump;
-document.body.ontouchstart=jump;
 function jump(){if(y===0)vy=12}
+document.body.addEventListener('click',jump);
+document.body.addEventListener('touchstart',jump);
 
 function startGame(){
-  setInterval(spawnObstacle,1600);
+  setInterval(spawnObstacle,1700);
   requestAnimationFrame(loop);
 }
 
@@ -135,26 +171,20 @@ function spawnObstacle(){
 function loop(){
   if(!playing)return;
   vy-=gravity;y+=vy;if(y<0){y=0;vy=0}
-  jerry.style.bottom=50+y+'px';
+  jerry.style.bottom=70+y+'px';
 
   obstacles.forEach((o,i)=>{
     let x=o.offsetLeft-4;o.style.left=x+'px';
-    if(x<110 && x>50 && y<55) endGame(false);
-    if(x<-40){
-      o.remove();
-      obstacles.splice(i,1);
-      passed++;
-      if(passed===14)finish();
-    }
+    if(x<95 && x>40 && y<55) endGame(false);
+    if(x<-40){o.remove();obstacles.splice(i,1);passed++;if(passed===14)finish()}
   });
   requestAnimationFrame(loop);
 }
 
 function finish(){
   playing=false;
-  const finish=document.createElement('div');
-  finish.id='finish';
-  game.appendChild(finish);
+  const f=document.createElement('div');
+  f.id='finish';game.appendChild(f);
   setTimeout(gojoAttack,600);
 }
 
@@ -166,27 +196,22 @@ function gojoAttack(){
   gojo.style.right='20px';
   let pX=window.innerWidth-200;
   const blast=setInterval(()=>{
-    pX-=15;
-    purple.style.left=pX+'px';
-    if(pX<80){
-      clearInterval(blast);
-      endGame(true);
-    }
+    pX-=16;purple.style.left=pX+'px';
+    if(pX<80){clearInterval(blast);endGame(true)}
   },16);
 }
 
 function endGame(win){
-  playing=false;
-  game.classList.add('hidden');
+  playing=false;game.classList.add('hidden');
   showEnding(win);
 }
 
 function showEnding(win){
   document.getElementById('end').classList.remove('hidden');
   document.getElementById('endText').innerHTML=
-    win
-    ? "Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️<br><br>You are officially the Valentine of Mr. Ishit 💖"
-    : "Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️<br><br>Or do you want to restart the game?";
+    win?
+    "Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️<br><br>You are officially the Valentine of Mr. Ishit 💖":
+    "Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️<br><br>Or do you want to restart the game?";
 }
 </script></body>
 </html>
