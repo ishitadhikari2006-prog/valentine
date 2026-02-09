@@ -115,7 +115,7 @@ button{
   <h2 id="question">
     Do you accept your bf is always right in every argument and you wanna be his Valentine 😼❤️
   </h2>
-  <div class="buttons">
+  <div class="buttons" id="buttonArea">
     <button id="yesBtn">YES</button>
     <button id="noBtn">NO</button>
   </div>
@@ -142,7 +142,6 @@ const game = document.getElementById('game');
 const end = document.getElementById('end');
 const yesBtn = document.getElementById('yesBtn');
 const noBtn = document.getElementById('noBtn');
-const question = document.getElementById('question');
 
 const jerry = document.getElementById('jerry');
 const gojo = document.getElementById('gojo');
@@ -160,8 +159,6 @@ let playing = false;
 
 let gameInterval, loopId, purpleInterval;
 
-let noStartRect = null; // store original NO position
-
 yesBtn.onclick = () => {
   start.classList.add('hidden');
   end.classList.remove('hidden');
@@ -169,24 +166,22 @@ yesBtn.onclick = () => {
 };
 
 noBtn.onclick = () => {
-  if(!noStartRect){
-    noStartRect = noBtn.getBoundingClientRect();
-  }
-
   noCount++;
 
-  // SAME shrink logic
+  // SAME scaling behavior
   noBtn.style.transform = `scale(${Math.max(.2,1-noCount*.06)})`;
   yesBtn.style.transform = `scale(${1+noCount*.08})`;
 
+  // 📦 FIXED SMALL MOVEMENT BOX (green area)
   const noRect = noBtn.getBoundingClientRect();
+  const centerX = window.innerWidth / 2;
 
-  // 🔒 EXACT GREEN-BOX AREA
-  const minX = window.innerWidth / 2 - 110;
-  const maxX = window.innerWidth / 2 + 110 - noRect.width;
+  const minX = centerX - 70;
+  const maxX = centerX + 70 - noRect.width;
 
-  const minY = noStartRect.bottom + 10;
-  const maxY = window.innerHeight - noRect.height - 30;
+  const baseY = noRect.top;
+  const minY = baseY + 10;
+  const maxY = baseY + 90; // small height → no scrolling
 
   const x = Math.random() * (maxX - minX) + minX;
   const yPos = Math.random() * (maxY - minY) + minY;
