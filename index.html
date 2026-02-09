@@ -27,16 +27,84 @@ button{
   border:none;
   border-radius:14px;
   cursor:pointer;
-  transition:transform .2s, left .25s, top .25s;
+  transition:transform .2s;
 }
 #yesBtn{background:#ff5fa2;color:#fff;}
 #noBtn{background:#444;color:#fff;}
+
 .buttons{
+  position:relative;
   display:flex;
   flex-direction:column;
-  gap:20px;
+  align-items:center;
+  gap:18px; /* small gap between YES and NO */
   margin-top:30px;
-  position:relative;
+}
+
+#game{justify-content:flex-start;}
+#title{margin-top:20px;font-size:1.3rem;font-weight:bold;}
+#ground{position:absolute;bottom:80px;width:100%;height:4px;background:#aaa;}
+
+#jerry{
+  position:absolute;
+  bottom:80px;
+  left:40px;
+  width:60px;
+  z-index:2;
+}
+
+.obstacle{
+  position:absolute;
+  bottom:80px;
+  width:20px;
+  height:60px;
+  background:#ff5fa2;
+}
+
+#finish{
+  position:absolute;
+  bottom:80px;
+  right:40px;
+  width:6px;
+  height:90px;
+  background:black;
+}
+#finishText{
+  position:absolute;
+  bottom:180px;
+  right:20px;
+  font-weight:bold;
+}
+
+#gojo{
+  position:absolute;
+  bottom:80px;
+  right:-300px;
+  width:140px;
+  z-index:3;
+  transition:right 5s cubic-bezier(.25,.8,.25,1);
+}
+
+#purple{
+  position:absolute;
+  width:40px;
+  height:40px;
+  background:purple;
+  border-radius:50%;
+  filter:blur(4px);
+  box-shadow:0 0 20px 10px rgba(128,0,128,.7);
+  z-index:4;
+  display:none;
+}
+
+#introVideo{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  z-index:20;
+  display:none;
 }
 </style>
 </head>
@@ -45,45 +113,232 @@ button{
 
 <div id="start" class="screen">
   <h2>Do you accept your bf is always right in every argument and you wanna be his Valentine 😼❤️</h2>
-  <div class="buttons" id="btnWrap">
+  <div class="buttons" id="buttonArea">
     <button id="yesBtn">YES</button>
     <button id="noBtn">NO</button>
   </div>
 </div>
 
+<div id="game" class="screen hidden">
+  <div id="title">RUN LITTLE MOUSE RUN</div>
+  <img id="jerry" src="jerry.png">
+  <div id="ground"></div>
+</div>
+
+<img id="gojo" src="gojo.png">
+<div id="purple"></div>
+<video id="introVideo" src="intro.mp4"></video>
+
+<audio id="gameMusic" src="game-music.mp3" loop preload="auto"></audio>
+<audio id="gojoSound" src="gojo-entry.mp3" preload="auto"></audio>
+
+<div id="end" class="screen hidden"></div>
+
 <script>
+const start = document.getElementById('start');
+const game = document.getElementById('game');
+const end = document.getElementById('end');
 const yesBtn = document.getElementById('yesBtn');
 const noBtn = document.getElementById('noBtn');
-const btnWrap = document.getElementById('btnWrap');
+const buttonArea = document.getElementById('buttonArea');
+
+const jerry = document.getElementById('jerry');
+const gojo = document.getElementById('gojo');
+const purple = document.getElementById('purple');
+const introVideo = document.getElementById('introVideo');
+const gojoSound = document.getElementById('gojoSound');
+const gameMusic = document.getElementById('gameMusic');
 
 let noCount = 0;
+let y = 0;
+let vy = 0;
+let obstacles = [];
+let passed = 0;
+let playing = false;
+
+let gameInterval, loopId, purpleInterval;
+
+yesBtn.onclick = () => {
+  start.classList.add('hidden');
+  end.classList.remove('hidden');
+  end.innerHTML = "<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
+};
 
 noBtn.onclick = () => {
   noCount++;
 
-  /* 🔹 keep existing shrink behavior */
+  // SAME shrinking logic (unchanged)
   noBtn.style.transform = `scale(${Math.max(.2,1-noCount*.06)})`;
   yesBtn.style.transform = `scale(${1+noCount*.08})`;
 
-  /* 🔹 move NO safely on screen */
-  const wrapRect = btnWrap.getBoundingClientRect();
-  const yesRect = yesBtn.getBoundingClientRect();
+  // SAFE POSITION CHANGE
+  const areaRect = buttonArea.getBoundingClientRect();
   const noRect = noBtn.getBoundingClientRect();
 
-  noBtn.style.position = 'absolute';
+  const minX = 10;
+  const maxX = window.innerWidth - noRect.width - 10;
 
-  const padding = 10;
-  const minY = (yesRect.bottom - wrapRect.top) + 20; // gap below YES
-  const maxX = wrapRect.width - noRect.width - padding;
-  const maxY = wrapRect.height - noRect.height - padding;
+  const minY = areaRect.bottom + 10; // always below YES + text
+  const maxY = window.innerHeight - noRect.height - 20;
 
-  const x = Math.random() * maxX;
+  const x = Math.random() * (maxX - minX) + minX;
   const y = Math.random() * (maxY - minY) + minY;
 
+  noBtn.style.position = 'fixed';
   noBtn.style.left = x + 'px';
   noBtn.style.top = y + 'px';
+
+  if(noCount === 14){
+    introVideo.style.display = 'block';
+    introVideo.play();
+    introVideo.onended = () => {
+      introVideo.style.display = 'none';
+      start.classList.add('hidden');
+      game.classList.remove('hidden');
+      startGame();
+    };
+  }
+};
+
+function startGame(){
+  playing = true;
+  gameMusic.currentTime = 0;
+  gameMusic.play();
+  gameInterval = setInterval(spawnObstacle,1500);
+  loopId = requestAnimationFrame(loop);
+}
+
+function spawnObstacle(){
+  if(!playing) return;
+  const o = document.createElement('div');
+  o.className = 'obstacle';
+  o.style.left = '100%';
+  game.appendChild(o);
+  obstacles.push(o);
+}
+
+function loop(){
+  if(!playing) return;
+
+  vy += -0.3;
+  y += vy;
+
+  if(y <= 0){
+    y = 0;
+    vy = 0;
+  }
+
+  jerry.style.bottom = (80 + y) + 'px';
+
+  obstacles.forEach((o,i)=>{
+    let x = o.offsetLeft;
+    o.style.left = (x - 5) + 'px';
+
+    if(x < 90 && x > 40 && y < 50){
+      showFinalOptions();
+    }
+
+    if(x < -30){
+      o.remove();
+      obstacles.splice(i,1);
+      passed++;
+      if(passed === 14) finish();
+    }
+  });
+
+  loopId = requestAnimationFrame(loop);
+}
+
+game.onclick = () => {
+  if(playing && y === 0){
+    vy = 9;
+  }
+};
+
+function finish(){
+  playing = false;
+  clearInterval(gameInterval);
+  cancelAnimationFrame(loopId);
+
+  const f = document.createElement('div');
+  f.id = 'finish';
+  game.appendChild(f);
+
+  const t = document.createElement('div');
+  t.id = 'finishText';
+  t.innerText = "No I don't";
+  game.appendChild(t);
+
+  slideGojoIn();
+}
+
+function slideGojoIn(){
+  gameMusic.pause();
+  gojoSound.currentTime = 0;
+  gojoSound.play();
+  gojo.style.right = '50px';
+  setTimeout(throwHollowPurple,4000);
+}
+
+function throwHollowPurple(){
+  purple.style.display = 'block';
+  let x = window.innerWidth - 150;
+  purple.style.left = x + 'px';
+  purple.style.bottom = '140px';
+
+  purpleInterval = setInterval(()=>{
+    x -= 15;
+    purple.style.left = x + 'px';
+
+    if(x < 80){
+      clearInterval(purpleInterval);
+      purple.style.display = 'none';
+      showFinalOptions();
+    }
+  },16);
+}
+
+function showFinalOptions(){
+  playing = false;
+  clearInterval(gameInterval);
+  clearInterval(purpleInterval);
+  cancelAnimationFrame(loopId);
+
+  gameMusic.pause();
+  game.classList.add('hidden');
+  gojo.style.right = '-300px';
+  purple.style.display = 'none';
+
+  end.classList.remove('hidden');
+  end.innerHTML = `
+    <h2>Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️</h2>
+    <div class="buttons">
+      <button onclick="finalYes()" style="background:#ff5fa2;color:#fff;">YES</button>
+      <button onclick="restartGame()" style="background:#444;color:#fff;">RESTART</button>
+    </div>
+  `;
+}
+
+window.finalYes = () => {
+  end.innerHTML = "<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
+};
+
+window.restartGame = () => {
+  end.classList.add('hidden');
+  game.classList.remove('hidden');
+
+  obstacles.forEach(o=>o.remove());
+  obstacles=[];
+  passed=0;
+  y=0;
+  vy=0;
+
+  document.getElementById('finish')?.remove();
+  document.getElementById('finishText')?.remove();
+
+  gojo.style.right='-300px';
+  startGame();
 };
 </script>
-
 </body>
 </html>
