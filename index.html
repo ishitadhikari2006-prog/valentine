@@ -42,74 +42,8 @@ button{
   position:relative;
   width:100%;
   max-width:320px;
-  height:140px;
+  height:160px; /* ⭐ slightly more height */
   margin-top:30px;
-}
-
-#game{justify-content:flex-start;}
-#title{margin-top:20px;font-size:1.3rem;font-weight:bold;}
-#ground{position:absolute;bottom:80px;width:100%;height:4px;background:#aaa;}
-
-#jerry{
-  position:absolute;
-  bottom:80px;
-  left:40px;
-  width:60px;
-  z-index:2;
-}
-
-.obstacle{
-  position:absolute;
-  bottom:80px;
-  width:20px;
-  height:60px;
-  background:#ff5fa2;
-}
-
-#finish{
-  position:absolute;
-  bottom:80px;
-  right:40px;
-  width:6px;
-  height:90px;
-  background:black;
-}
-#finishText{
-  position:absolute;
-  bottom:180px;
-  right:20px;
-  font-weight:bold;
-}
-
-#gojo{
-  position:absolute;
-  bottom:80px;
-  right:-300px;
-  width:140px;
-  z-index:3;
-  transition:right 5s cubic-bezier(.25,.8,.25,1);
-}
-
-#purple{
-  position:absolute;
-  width:40px;
-  height:40px;
-  background:purple;
-  border-radius:50%;
-  filter:blur(4px);
-  box-shadow:0 0 20px 10px rgba(128,0,128,.7);
-  z-index:4;
-  display:none;
-}
-
-#introVideo{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  z-index:20;
-  display:none;
 }
 </style>
 </head>
@@ -124,58 +58,30 @@ button{
   </div>
 </div>
 
-<div id="game" class="screen hidden">
-  <div id="title">RUN LITTLE MOUSE RUN</div>
-  <img id="jerry" src="jerry.png">
-  <div id="ground"></div>
-</div>
-
-<img id="gojo" src="gojo.png">
-<div id="purple"></div>
-<video id="introVideo" src="intro.mp4"></video>
-
-<audio id="gameMusic" src="game-music.mp3" loop preload="auto"></audio>
-<audio id="gojoSound" src="gojo-entry.mp3" preload="auto"></audio>
-
-<div id="end" class="screen hidden"></div>
-
 <script>
-const start = document.getElementById('start');
-const game = document.getElementById('game');
-const end = document.getElementById('end');
 const yesBtn = document.getElementById('yesBtn');
 const noBtn = document.getElementById('noBtn');
 const btnArea = document.getElementById('btnArea');
-const jerry = document.getElementById('jerry');
-const gojo = document.getElementById('gojo');
-const purple = document.getElementById('purple');
-const introVideo = document.getElementById('introVideo');
-const gojoSound = document.getElementById('gojoSound');
-const gameMusic = document.getElementById('gameMusic');
 
 let noCount = 0;
-let y = 0;
-let vy = 0;
-let obstacles = [];
-let passed = 0;
-let playing = false;
 
-let gameInterval, loopId, purpleInterval;
+/* ⭐ INITIAL PERFECT ALIGNMENT */
+window.onload = () => {
+  const yesRect = yesBtn.getBoundingClientRect();
+  const areaRect = btnArea.getBoundingClientRect();
 
-yesBtn.onclick = () => {
-  start.classList.add('hidden');
-  end.classList.remove('hidden');
-  end.innerHTML = "<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
+  noBtn.style.left = (yesRect.left - areaRect.left) + 'px';
+  noBtn.style.top = (yesRect.bottom - areaRect.top + 12) + 'px'; // small gap
 };
 
 noBtn.onclick = () => {
   noCount++;
 
-  // shrink effect (unchanged)
+  // shrink logic (unchanged)
   noBtn.style.transform = `scale(${Math.max(.2,1-noCount*.06)})`;
   yesBtn.style.transform = `scale(${1+noCount*.08})`;
 
-  // safe movement logic
+  // movement logic (UNCHANGED)
   const areaRect = btnArea.getBoundingClientRect();
   const noRect = noBtn.getBoundingClientRect();
   const yesRect = yesBtn.getBoundingClientRect();
@@ -205,33 +111,12 @@ noBtn.onclick = () => {
     ){
       overlap = true;
     }
-
   } while(overlap);
 
   noBtn.style.left = x + 'px';
   noBtn.style.top = yPos + 'px';
-
-  if(noCount === 14){
-    introVideo.style.display = 'block';
-    introVideo.play();
-    introVideo.onended = () => {
-      introVideo.style.display = 'none';
-      start.classList.add('hidden');
-      game.classList.remove('hidden');
-      startGame();
-    };
-  }
 };
-
-function startGame(){
-  playing = true;
-  gameMusic.currentTime = 0;
-  gameMusic.play();
-  gameInterval = setInterval(spawnObstacle,1500);
-  loopId = requestAnimationFrame(loop);
-}
-
-/* ⚠️ GAME LOGIC BELOW — UNCHANGED */
 </script>
+
 </body>
 </html>
