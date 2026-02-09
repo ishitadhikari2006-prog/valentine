@@ -52,15 +52,17 @@
     display: none;
   }
 
-  /* --- VIDEO STYLES --- */
+  /* --- VIDEO STYLES (FIXED FOR FULL SCREEN) --- */
   #introVideo {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
+    position: fixed; /* Forces it relative to the viewport window */
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
     object-fit: cover;
-    z-index: 20;
+    z-index: 999; /* High z-index to sit on top */
     display: none;
+    background: black;
   }
 </style>
 </head>
@@ -82,7 +84,7 @@
 
 <img id="gojo" src="gojo.png">
 <div id="purple"></div>
-<video id="introVideo" src="intro.mp4"></video>
+<video id="introVideo" src="intro.mp4" playsinline webkit-playsinline></video>
 <div id="end" class="screen hidden"></div>
 
 <script>
@@ -115,7 +117,7 @@ noBtn.onclick = () => {
   if(noCount===14){
     // Play video on 14th tap
     introVideo.style.display = 'block';
-    introVideo.play();
+    introVideo.play().catch(e => console.log("Video play error:", e));
     introVideo.onended = ()=>{
       introVideo.style.display='none';
       start.classList.add('hidden');
@@ -145,13 +147,13 @@ function spawnObstacle(){
 function loop(){
   if(!playing) return;
     
-  // Gravity (REDUCED to allow jump height)
-  vy -= 0.3; 
+  // Gravity adjusted for lower jump force
+  // With vy=4, we need very low gravity (0.12) to clear the obstacle height
+  vy -= 0.12; 
   y += vy;
   
   if(y<0){y=0; vy=0;}
   
-  // Fixed parentheses for safe calculation
   jerry.style.bottom = (80 + y) + 'px';
 
   // Obstacles
@@ -160,7 +162,6 @@ function loop(){
     o.style.left = (currentLeft-5)+'px';
 
     // Collision (Loss)
-    // Check height against collision box
     if(currentLeft < 90 && currentLeft > 40 && y < 50){
         showFinalOptions();
     }
@@ -177,14 +178,14 @@ function loop(){
   loopId=requestAnimationFrame(loop);
 }
 
-// Jump Function
+// Jump Function (Set to 4 as requested)
 const performJump = () => {
   if(playing && y === 0) {
-    vy = 6;
+    vy = 4;
   }
 };
 
-// Input listeners (Added touch for mobile)
+// Input listeners
 game.onclick = performJump;
 game.ontouchstart = performJump;
 
