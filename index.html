@@ -181,11 +181,12 @@ noBtn.onclick = () => {
     const yesRect = yesBtn.getBoundingClientRect();
     const noRect = noBtn.getBoundingClientRect();
 
+    // define a small safe box under YES
     box = {
-      minX: window.innerWidth/2 - 90,
-      maxX: window.innerWidth/2 + 90 - noRect.width,
-      minY: noRect.top,
-      maxY: window.innerHeight - 120
+      minX: window.innerWidth/2 - 90,         // left limit
+      maxX: window.innerWidth/2 + 90 - noRect.width, // right limit
+      minY: noRect.top,                        // top limit (original NO pos)
+      maxY: noRect.top + 150                   // bottom limit, ~green box height
     };
 
     noPos.x = noRect.left;
@@ -194,12 +195,18 @@ noBtn.onclick = () => {
     noBtn.style.position = 'fixed';
   }
 
-  // small random movement
-  const dx = (Math.random() * 60) - 30; // left/right small
-  const dy = Math.random() * 50;        // mostly downward
+  // random small movement inside the box
+  const dx = (Math.random() * 40) - 20; // left/right
+  const dy = (Math.random() * 40) - 20; // up/down
 
-  noPos.x = Math.min(box.maxX, Math.max(box.minX, noPos.x + dx));
-  noPos.y = Math.min(box.maxY, Math.max(box.minY, noPos.y + dy));
+  noPos.x += dx;
+  noPos.y += dy;
+
+  // clamp inside box
+  if(noPos.x < box.minX) noPos.x = box.minX;
+  if(noPos.x > box.maxX) noPos.x = box.maxX;
+  if(noPos.y < box.minY) noPos.y = box.minY;
+  if(noPos.y > box.maxY) noPos.y = box.maxY;
 
   noBtn.style.left = noPos.x + 'px';
   noBtn.style.top = noPos.y + 'px';
@@ -216,6 +223,7 @@ noBtn.onclick = () => {
   }
 };
 
+// ---------- GAME FUNCTIONS (unchanged) ----------
 function startGame(){
   playing = true;
   gameMusic.currentTime = 0;
@@ -235,25 +243,16 @@ function spawnObstacle(){
 
 function loop(){
   if(!playing) return;
-
   vy += -0.3;
   y += vy;
-
-  if(y <= 0){
-    y = 0;
-    vy = 0;
-  }
-
+  if(y <= 0){ y=0; vy=0; }
   jerry.style.bottom = (80 + y) + 'px';
-
   obstacles.forEach((o,i)=>{
     let x = o.offsetLeft;
     o.style.left = (x - 5) + 'px';
-
     if(x < 90 && x > 40 && y < 50){
       showFinalOptions();
     }
-
     if(x < -30){
       o.remove();
       obstacles.splice(i,1);
@@ -261,72 +260,50 @@ function loop(){
       if(passed === 14) finish();
     }
   });
-
   loopId = requestAnimationFrame(loop);
 }
 
-game.onclick = () => {
-  if(playing && y === 0){
-    vy = 9;
-  }
-};
+game.onclick = () => { if(playing && y===0) vy=9; }
 
 function finish(){
-  playing = false;
+  playing=false;
   clearInterval(gameInterval);
   cancelAnimationFrame(loopId);
-
-  const f = document.createElement('div');
-  f.id = 'finish';
-  game.appendChild(f);
-
-  const t = document.createElement('div');
-  t.id = 'finishText';
-  t.innerText = "No I don't";
-  game.appendChild(t);
-
+  const f=document.createElement('div'); f.id='finish'; game.appendChild(f);
+  const t=document.createElement('div'); t.id='finishText'; t.innerText="No I don't"; game.appendChild(t);
   slideGojoIn();
 }
 
 function slideGojoIn(){
   gameMusic.pause();
-  gojoSound.currentTime = 0;
+  gojoSound.currentTime=0;
   gojoSound.play();
-  gojo.style.right = '50px';
+  gojo.style.right='50px';
   setTimeout(throwHollowPurple,4000);
 }
 
 function throwHollowPurple(){
-  purple.style.display = 'block';
-  let x = window.innerWidth - 150;
-  purple.style.left = x + 'px';
-  purple.style.bottom = '140px';
-
-  purpleInterval = setInterval(()=>{
-    x -= 15;
-    purple.style.left = x + 'px';
-
-    if(x < 80){
-      clearInterval(purpleInterval);
-      purple.style.display = 'none';
-      showFinalOptions();
-    }
+  purple.style.display='block';
+  let x=window.innerWidth-150;
+  purple.style.left=x+'px';
+  purple.style.bottom='140px';
+  purpleInterval=setInterval(()=>{
+    x-=15; purple.style.left=x+'px';
+    if(x<80){ clearInterval(purpleInterval); purple.style.display='none'; showFinalOptions(); }
   },16);
 }
 
 function showFinalOptions(){
-  playing = false;
+  playing=false;
   clearInterval(gameInterval);
   clearInterval(purpleInterval);
   cancelAnimationFrame(loopId);
-
   gameMusic.pause();
   game.classList.add('hidden');
-  gojo.style.right = '-300px';
-  purple.style.display = 'none';
-
+  gojo.style.right='-300px';
+  purple.style.display='none';
   end.classList.remove('hidden');
-  end.innerHTML = `
+  end.innerHTML=`
     <h2>Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️</h2>
     <div class="buttons">
       <button onclick="finalYes()" style="background:#ff5fa2;color:#fff;">YES</button>
@@ -335,23 +312,15 @@ function showFinalOptions(){
   `;
 }
 
-window.finalYes = () => {
-  end.innerHTML = "<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
-};
+window.finalYes=()=>{ end.innerHTML="<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>"; }
 
-window.restartGame = () => {
+window.restartGame=()=>{
   end.classList.add('hidden');
   game.classList.remove('hidden');
-
-  obstacles.forEach(o=>o.remove());
-  obstacles=[];
-  passed=0;
-  y=0;
-  vy=0;
-
+  obstacles.forEach(o=>o.remove()); obstacles=[];
+  passed=0; y=0; vy=0;
   document.getElementById('finish')?.remove();
   document.getElementById('finishText')?.remove();
-
   gojo.style.right='-300px';
   startGame();
 };
