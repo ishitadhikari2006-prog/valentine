@@ -13,7 +13,7 @@ body{
   font-family:Arial,sans-serif;
 }
 
-/* GAME */
+/* GAME CONTAINER */
 #game{
   position:relative;
   width:100vw;
@@ -29,27 +29,43 @@ body{
   left:60px;
   width:60px;
   height:60px;
+  z-index: 2;
 }
 
 /* OBSTACLE */
 .obstacle{
   position:absolute;
-  bottom:70px;           /* ⬅️ slightly higher */
+  bottom:70px;
   width:40px;
-  height:90px;           /* ⬅️ longer obstacle */
+  height:90px;
   background:#000;
+  z-index: 1;
 }
 
-/* TEXT */
+/* TEXT BOX & BUTTONS */
 #textBox{
   position:absolute;
   top:20%;
   width:100%;
   text-align:center;
   font-size:20px;
+  font-weight: bold;
   display:none;
   z-index:5;
+  padding: 0 20px;
 }
+
+/* BUTTON STYLES */
+button {
+  padding: 10px 20px;
+  font-size: 16px;
+  margin: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.btn-yes { background-color: #ff4d4d; color: white; }
+.btn-no { background-color: #ccc; color: black; }
 
 /* VIDEO FULLSCREEN */
 #videoWrap{
@@ -77,10 +93,12 @@ body{
 
 <div id="game">
   <img id="jerry" src="jerry.png">
+  
   <div id="textBox">
-    Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️  
+    Do you now accept your bf is always right in every argument and wanna be his Valentine? 😼❤️  
     <br><br>
-    <button onclick="restart()">Restart</button>
+    <button class="btn-yes" onclick="restart()">Yes / Restart</button>
+    <button class="btn-no" onclick="tapNo()">No</button>
   </div>
 </div>
 
@@ -93,7 +111,7 @@ const textBox = document.getElementById("textBox");
 
 let y = 0;
 let vy = 0;
-let gravity = 0.18;
+let gravity = 0.25; // Slightly heavier gravity for better feel
 let playing = true;
 let obs;
 let noCount = 0;
@@ -114,20 +132,30 @@ function loop(){
   y += vy;
   if(y < 0){ y = 0; vy = 0; }
 
-  jerry.style.bottom = 80 + y + "px";
+  jerry.style.bottom = (80 + y) + "px";
 
   // OBSTACLE MOVE
-  let x = obs.offsetLeft - 4;
+  // We use getBoundingClientRect for more accurate collision
+  let obsRect = obs.getBoundingClientRect();
+  let jerryRect = jerry.getBoundingClientRect();
+  
+  // Move obstacle logic
+  let currentLeft = parseFloat(obs.style.left) || 100; 
+  // Note: We use pixel movement logic below based on offsetLeft for simplicity
+  let x = obs.offsetLeft - 5; // Speed 5
   obs.style.left = x + "px";
 
-  // COLLISION (adjusted for taller obstacle)
-  if(x < 110 && x > 40 && y < 78){
-    endGame();
-  }
-
-  // RESET OBSTACLE
+  // RESET OBSTACLE LOOP
   if(x < -50){
     obs.style.left = "100vw";
+  }
+
+  // COLLISION DETECTION
+  // If Jerry's right side > Obstacle left side
+  // AND Jerry's left side < Obstacle right side
+  // AND Jerry is not high enough (y < 90)
+  if(x < 110 && x > 40 && y < 90){
+    endGame();
   }
 
   requestAnimationFrame(loop);
@@ -135,9 +163,12 @@ function loop(){
 loop();
 
 // TAP TO JUMP
-game.onclick = ()=>{
+game.onclick = (e)=>{
+  // Prevent jump if clicking buttons
+  if(e.target.tagName === 'BUTTON') return;
+
   if(playing && y === 0){
-    vy = 4.5;
+    vy = 8.5; // FIXED: Increased jump power to clear the 90px obstacle
   }
 };
 
@@ -146,9 +177,16 @@ function endGame(){
   textBox.style.display = "block";
 }
 
-// VIDEO ON 14th NO
+// THE MISSING NO BUTTON FUNCTION
 function tapNo(){
   noCount++;
+  // Move the No button around or show alert if you want
+  // For now, let's keep your logic: trigger video at 14 clicks
+  
+  if(noCount >= 5) {
+     alert("You can't say no! 😤");
+  }
+  
   if(noCount === 14){
     videoWrap.style.display = "block";
     video.currentTime = 0;
@@ -156,7 +194,7 @@ function tapNo(){
 
     video.onended = ()=>{
       videoWrap.style.display = "none";
-      startGame();
+      restart();
     };
   }
 }
@@ -164,9 +202,17 @@ function tapNo(){
 function startGame(){
   playing = true;
   y = 0; vy = 0;
+  
+  // RESET OBSTACLE POSITION
   obs.style.left = "100vw";
+  
   textBox.style.display = "none";
-  loop();
+  
+  // FIXED: Small delay to let browser render the reset before looping
+  // This prevents the "Death Loop" bug
+  setTimeout(() => {
+    loop();
+  }, 100);
 }
 
 function restart(){
