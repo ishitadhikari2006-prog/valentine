@@ -121,6 +121,9 @@ button{
 <div id="purple"></div>
 <video id="introVideo" src="intro.mp4"></video>
 
+<!-- 🔊 GAME BACKGROUND MUSIC -->
+<audio id="gameMusic" src="game-music.mp3" loop preload="auto"></audio>
+
 <!-- 🔊 GOJO ENTRY SOUND -->
 <audio id="gojoSound" src="gojo-entry.mp3" preload="auto"></audio>
 
@@ -137,6 +140,7 @@ const gojo = document.getElementById('gojo');
 const purple = document.getElementById('purple');
 const introVideo = document.getElementById('introVideo');
 const gojoSound = document.getElementById('gojoSound');
+const gameMusic = document.getElementById('gameMusic');
 
 let noCount = 0;
 let y = 0;
@@ -172,6 +176,8 @@ noBtn.onclick = () => {
 
 function startGame(){
   playing = true;
+  gameMusic.currentTime = 0;
+  gameMusic.play();               // ▶️ START GAME SONG
   gameInterval = setInterval(spawnObstacle,1500);
   loopId = requestAnimationFrame(loop);
 }
@@ -241,6 +247,7 @@ function finish(){
 }
 
 function slideGojoIn(){
+  gameMusic.pause();              // ⏹️ STOP GAME SONG
   gojoSound.currentTime = 0;
   gojoSound.play();
   gojo.style.right = '50px';
@@ -271,6 +278,7 @@ function showFinalOptions(){
   clearInterval(purpleInterval);
   cancelAnimationFrame(loopId);
 
+  gameMusic.pause();              // ⏹️ SAFETY STOP
   game.classList.add('hidden');
   gojo.style.right = '-300px';
   purple.style.display = 'none';
