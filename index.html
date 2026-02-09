@@ -44,18 +44,6 @@
     z-index: 4;  
     display: none;  
   }  
-
-  /* Video overlay */  
-  #videoOverlay {  
-    position: absolute;  
-    inset: 0;  
-    display: flex;  
-    justify-content: center;  
-    align-items: center;  
-    background: black;  
-    z-index: 20;  
-  }  
-  #videoOverlay video { width: 80%; height: auto; }  
 </style>  
 </head>  
 <body>  
@@ -97,21 +85,18 @@ const introVideo = document.getElementById('introVideo');
 let noCount=0, y=0, vy=0, obstacles=[], passed=0, playing=false;  
 let gameInterval, loopId, purpleInterval;  
 
-// --- YES BUTTON ---  
 yesBtn.onclick = () => {  
   start.classList.add('hidden');  
   end.classList.remove('hidden');  
   end.innerHTML="<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";  
 };  
 
-// --- NO BUTTON ---  
 noBtn.onclick = () => {  
   noCount++;  
   noBtn.style.transform = `scale(${Math.max(0.2,1-noCount*0.06)})`;  
   yesBtn.style.transform = `scale(${1+noCount*0.08})`;  
 
   if(noCount===14){  
-    // Show video first  
     videoOverlay.classList.remove('hidden');  
     introVideo.play();  
     introVideo.onended = () => {  
@@ -140,7 +125,6 @@ function spawnObstacle(){
 
 function loop(){  
   if(!playing) return;  
-    
   vy -= 0.6;  
   y += vy;  
   if(y<0){y=0; vy=0;}  
@@ -163,7 +147,8 @@ function loop(){
   loopId=requestAnimationFrame(loop);  
 }  
 
-game.onclick = ()=>{if(playing && y===0) vy=6;}; // <-- Jerry Jump height set to 6  
+// <-- JUMP FIXED TO VISIBLY LOW (6 scale)  
+game.onclick = ()=>{if(playing && y===0) vy=9;};  
 
 function finish(){  
   playing=false;  
@@ -173,10 +158,12 @@ function finish(){
   const f = document.createElement('div');  
   f.id = 'finish';  
   game.appendChild(f);  
+    
   const t = document.createElement('div');  
   t.id = 'finishText';  
   t.innerText="No I don't";  
   game.appendChild(t);  
+  
   slideGojoIn();  
 }  
 
