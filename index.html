@@ -115,7 +115,7 @@ button{
   <h2 id="question">
     Do you accept your bf is always right in every argument and you wanna be his Valentine 😼❤️
   </h2>
-  <div class="buttons" id="buttonArea">
+  <div class="buttons">
     <button id="yesBtn">YES</button>
     <button id="noBtn">NO</button>
   </div>
@@ -159,6 +159,10 @@ let playing = false;
 
 let gameInterval, loopId, purpleInterval;
 
+// 🔒 movement box values
+let box = null;
+let noPos = { x: 0, y: 0 };
+
 yesBtn.onclick = () => {
   start.classList.add('hidden');
   end.classList.remove('hidden');
@@ -168,27 +172,37 @@ yesBtn.onclick = () => {
 noBtn.onclick = () => {
   noCount++;
 
-  // SAME scaling behavior
+  // SAME shrink behavior
   noBtn.style.transform = `scale(${Math.max(.2,1-noCount*.06)})`;
   yesBtn.style.transform = `scale(${1+noCount*.08})`;
 
-  // 📦 FIXED SMALL MOVEMENT BOX (green area)
-  const noRect = noBtn.getBoundingClientRect();
-  const centerX = window.innerWidth / 2;
+  // setup box once
+  if(!box){
+    const yesRect = yesBtn.getBoundingClientRect();
+    const noRect = noBtn.getBoundingClientRect();
 
-  const minX = centerX - 70;
-  const maxX = centerX + 70 - noRect.width;
+    box = {
+      minX: window.innerWidth/2 - 90,
+      maxX: window.innerWidth/2 + 90 - noRect.width,
+      minY: noRect.top,
+      maxY: window.innerHeight - 120
+    };
 
-  const baseY = noRect.top;
-  const minY = baseY + 10;
-  const maxY = baseY + 90; // small height → no scrolling
+    noPos.x = noRect.left;
+    noPos.y = noRect.top;
 
-  const x = Math.random() * (maxX - minX) + minX;
-  const yPos = Math.random() * (maxY - minY) + minY;
+    noBtn.style.position = 'fixed';
+  }
 
-  noBtn.style.position = 'fixed';
-  noBtn.style.left = x + 'px';
-  noBtn.style.top = yPos + 'px';
+  // small random movement
+  const dx = (Math.random() * 60) - 30; // left/right small
+  const dy = Math.random() * 50;        // mostly downward
+
+  noPos.x = Math.min(box.maxX, Math.max(box.minX, noPos.x + dx));
+  noPos.y = Math.min(box.maxY, Math.max(box.minY, noPos.y + dy));
+
+  noBtn.style.left = noPos.x + 'px';
+  noBtn.style.top = noPos.y + 'px';
 
   if(noCount === 14){
     introVideo.style.display = 'block';
