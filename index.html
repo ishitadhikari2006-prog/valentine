@@ -180,11 +180,12 @@ function spawnObstacle(){
   obstacles.push(o);
 }
 
+/* ================= FIXED PHYSICS ================= */
 function loop(){
   if(!playing) return;
 
-  // gravity (NEGATIVE as requested)
-  vy -= 0.4;
+  // gravity
+  vy += -0.3;       // smooth gravity
   y += vy;
 
   if(y <= 0){
@@ -213,11 +214,13 @@ function loop(){
   loopId = requestAnimationFrame(loop);
 }
 
+/* jump */
 game.onclick = () => {
   if(playing && y === 0){
-    vy = 10;
+    vy = 20;   // jump height FIXED
   }
 };
+/* ================================================= */
 
 function finish(){
   playing = false;
