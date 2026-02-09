@@ -2,133 +2,162 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Valentine Game</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:Arial,sans-serif;background:#fff;color:#000;overflow:hidden;}
+body{
+  font-family:Arial,sans-serif;
+  background:#fff;
+  overflow:hidden;
+}
 
+/* screens */
 .screen{
   position:absolute;
   inset:0;
   display:flex;
-  flex-direction:column;
-  justify-content:center;
   align-items:center;
-  text-align:center;
-  padding:20px;
+  justify-content:center;
+  flex-direction:column;
 }
-.hidden{display:none!important;}
+.hidden{display:none;}
+
+h1{margin-bottom:20px;text-align:center;}
 
 button{
-  padding:16px 36px;
-  font-size:1.2rem;
-  border:none;
-  border-radius:14px;
-  cursor:pointer;
-  transition:transform .2s, left .2s, top .2s;
+  padding:12px 20px;
+  font-size:18px;
+  margin:10px;
 }
 
-#yesBtn{background:#ff5fa2;color:#fff;}
+/* game */
+#game{
+  background:#f5f5f5;
+}
 
-#noBtn{
-  background:#444;
-  color:#fff;
+#jerry{
   position:absolute;
+  bottom:20px;
+  left:50px;
+  width:60px;
 }
 
-.buttons{
-  position:relative;
+.obstacle{
+  position:absolute;
+  bottom:20px;
+  right:-60px;
+  width:50px;
+}
+
+/* video */
+#introVideo{
+  position:absolute;
+  inset:0;
   width:100%;
-  max-width:320px;
-  height:160px;
-  margin-top:30px;
+  height:100%;
+  object-fit:cover;
+  display:none;
+  background:#000;
 }
 </style>
 </head>
 
 <body>
 
+<!-- START SCREEN -->
 <div id="start" class="screen">
-  <h2>Do you accept your bf is always right in every argument and you wanna be his Valentine 😼❤️</h2>
-  <div class="buttons" id="btnArea">
+  <h1>Do you accept your bf is always right? 😌</h1>
+  <div>
     <button id="yesBtn">YES</button>
     <button id="noBtn">NO</button>
   </div>
 </div>
 
+<!-- VIDEO -->
+<video id="introVideo" src="video.mp4"></video>
+
+<!-- GAME -->
+<div id="game" class="screen hidden">
+  <img id="jerry" src="jerry.png">
+</div>
+
+<!-- END -->
+<div id="end" class="screen hidden">
+  <h1>You lost 😢</h1>
+  <button onclick="location.reload()">Restart</button>
+</div>
+
+<!-- AUDIO -->
+<audio id="gameMusic" src="song.mp3" loop></audio>
+
 <script>
-const start = document.getElementById('start');
-const yesBtn = document.getElementById('yesBtn');
-const noBtn = document.getElementById('noBtn');
-const btnArea = document.getElementById('btnArea');
+const start = document.getElementById("start");
+const game = document.getElementById("game");
+const end = document.getElementById("end");
+
+const yesBtn = document.getElementById("yesBtn");
+const noBtn = document.getElementById("noBtn");
+
+const introVideo = document.getElementById("introVideo");
+const gameMusic = document.getElementById("gameMusic");
 
 let noCount = 0;
+let playing = false;
 
-/* ✅ FIX 1: initial perfect alignment */
-window.addEventListener('load', () => {
-  const yesRect = yesBtn.getBoundingClientRect();
-  const areaRect = btnArea.getBoundingClientRect();
-
-  noBtn.style.left = (yesRect.left - areaRect.left) + 'px';
-  noBtn.style.top = (yesRect.bottom - areaRect.top + 12) + 'px';
+/* YES CLICK */
+yesBtn.addEventListener("click", () => {
+  startVideo();
 });
 
-/* ✅ YES BUTTON — untouched */
-yesBtn.onclick = () => {
-  start.classList.add('hidden');
-  alert("YES CLICK WORKING ✅"); // remove alert in your full file
-};
-
-/* ✅ FIX 2: NO BUTTON — original logic PRESERVED */
-noBtn.onclick = () => {
+/* NO CLICK */
+noBtn.addEventListener("click", () => {
   noCount++;
 
-  // original shrink logic
-  noBtn.style.transform = `scale(${Math.max(.2,1-noCount*.06)})`;
-  yesBtn.style.transform = `scale(${1+noCount*.08})`;
+  // random move
+  noBtn.style.position = "absolute";
+  noBtn.style.left = Math.random()*70 + "%";
+  noBtn.style.top = Math.random()*70 + "%";
 
-  // ✅ added movement logic (safe)
-  const areaRect = btnArea.getBoundingClientRect();
-  const noRect = noBtn.getBoundingClientRect();
-  const yesRect = yesBtn.getBoundingClientRect();
-
-  let maxX = areaRect.width - noRect.width;
-  let maxY = areaRect.height - noRect.height;
-
-  let x, yPos, overlap;
-  do {
-    overlap = false;
-    x = Math.random() * maxX;
-    yPos = Math.random() * maxY;
-
-    const futureNo = {
-      left: x + areaRect.left,
-      right: x + areaRect.left + noRect.width,
-      top: yPos + areaRect.top,
-      bottom: yPos + areaRect.top + noRect.height
-    };
-
-    if (
-      futureNo.right > yesRect.left &&
-      futureNo.left < yesRect.right &&
-      futureNo.bottom > yesRect.top &&
-      futureNo.top < yesRect.bottom
-    ) {
-      overlap = true;
-    }
-  } while (overlap);
-
-  noBtn.style.left = x + 'px';
-  noBtn.style.top = yPos + 'px';
-
-  /* 🔥 ORIGINAL TRIGGER — RESTORED */
-  if (noCount === 14) {
-    alert("VIDEO WILL START NOW 🎬"); // placeholder
-    // your introVideo.play() logic goes here
+  if(noCount === 14){
+    startVideo();
   }
+});
+
+/* VIDEO FLOW */
+function startVideo(){
+  start.classList.add("hidden");
+  introVideo.style.display = "block";
+  introVideo.currentTime = 0;
+  introVideo.play();
+}
+
+introVideo.onended = () => {
+  introVideo.style.display = "none";
+  game.classList.remove("hidden");
+  startGame();
 };
+
+/* GAME */
+function startGame(){
+  playing = true;
+  gameMusic.currentTime = 0;
+  gameMusic.play();
+}
+
+/* SIMPLE LOSE DEMO (tap screen) */
+game.addEventListener("click", () => {
+  if(!playing) return;
+  gameOver();
+});
+
+function gameOver(){
+  playing = false;
+  gameMusic.pause();
+  game.classList.add("hidden");
+  end.classList.remove("hidden");
+}
 </script>
 
 </body>
