@@ -120,6 +120,10 @@ button{
 <img id="gojo" src="gojo.png">
 <div id="purple"></div>
 <video id="introVideo" src="intro.mp4"></video>
+
+<!-- 🔊 GOJO ENTRY SOUND -->
+<audio id="gojoSound" src="gojo-entry.mp3" preload="auto"></audio>
+
 <div id="end" class="screen hidden"></div>
 
 <script>
@@ -132,6 +136,7 @@ const jerry = document.getElementById('jerry');
 const gojo = document.getElementById('gojo');
 const purple = document.getElementById('purple');
 const introVideo = document.getElementById('introVideo');
+const gojoSound = document.getElementById('gojoSound');
 
 let noCount = 0;
 let y = 0;
@@ -180,12 +185,10 @@ function spawnObstacle(){
   obstacles.push(o);
 }
 
-/* ================= FIXED PHYSICS ================= */
 function loop(){
   if(!playing) return;
 
-  // gravity
-  vy += -0.3;       // smooth gravity
+  vy += -0.3;
   y += vy;
 
   if(y <= 0){
@@ -214,13 +217,11 @@ function loop(){
   loopId = requestAnimationFrame(loop);
 }
 
-/* jump */
 game.onclick = () => {
   if(playing && y === 0){
-    vy = 9;   // jump height FIXED
+    vy = 9;
   }
 };
-/* ================================================= */
 
 function finish(){
   playing = false;
@@ -240,6 +241,8 @@ function finish(){
 }
 
 function slideGojoIn(){
+  gojoSound.currentTime = 0;
+  gojoSound.play();
   gojo.style.right = '50px';
   setTimeout(throwHollowPurple,1500);
 }
