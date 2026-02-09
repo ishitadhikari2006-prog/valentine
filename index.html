@@ -37,7 +37,7 @@ button{
   display:flex;
   flex-direction:column;
   align-items:center;
-  gap:18px; /* small gap between YES and NO */
+  gap:18px;
   margin-top:30px;
 }
 
@@ -112,7 +112,10 @@ button{
 <body>
 
 <div id="start" class="screen">
-  <h2>Do you accept your bf is always right in every argument and you wanna be his Valentine 😼❤️</h2>
+  <h2 id="question">
+    Do you accept your bf is always right in every argument and you wanna be his Valentine 😼❤️
+  </h2>
+
   <div class="buttons" id="buttonArea">
     <button id="yesBtn">YES</button>
     <button id="noBtn">NO</button>
@@ -140,6 +143,7 @@ const game = document.getElementById('game');
 const end = document.getElementById('end');
 const yesBtn = document.getElementById('yesBtn');
 const noBtn = document.getElementById('noBtn');
+const question = document.getElementById('question');
 const buttonArea = document.getElementById('buttonArea');
 
 const jerry = document.getElementById('jerry');
@@ -167,26 +171,29 @@ yesBtn.onclick = () => {
 noBtn.onclick = () => {
   noCount++;
 
-  // SAME shrinking logic (unchanged)
+  // SAME shrink logic (unchanged)
   noBtn.style.transform = `scale(${Math.max(.2,1-noCount*.06)})`;
   yesBtn.style.transform = `scale(${1+noCount*.08})`;
 
-  // SAFE POSITION CHANGE
-  const areaRect = buttonArea.getBoundingClientRect();
+  // ---- SAFE MOVEMENT ZONE ----
+  const padding = 12;
   const noRect = noBtn.getBoundingClientRect();
+  const questionRect = question.getBoundingClientRect();
+  const yesRect = yesBtn.getBoundingClientRect();
 
-  const minX = 10;
-  const maxX = window.innerWidth - noRect.width - 10;
+  const minX = padding;
+  const maxX = window.innerWidth - noRect.width - padding;
 
-  const minY = areaRect.bottom + 10; // always below YES + text
-  const maxY = window.innerHeight - noRect.height - 20;
+  // must stay BELOW text + YES
+  const minY = yesRect.bottom + 16;
+  const maxY = window.innerHeight - noRect.height - padding;
 
-  const x = Math.random() * (maxX - minX) + minX;
-  const y = Math.random() * (maxY - minY) + minY;
+  const safeX = Math.random() * (maxX - minX) + minX;
+  const safeY = Math.random() * (maxY - minY) + minY;
 
   noBtn.style.position = 'fixed';
-  noBtn.style.left = x + 'px';
-  noBtn.style.top = y + 'px';
+  noBtn.style.left = safeX + 'px';
+  noBtn.style.top = safeY + 'px';
 
   if(noCount === 14){
     introVideo.style.display = 'block';
@@ -199,6 +206,8 @@ noBtn.onclick = () => {
     };
   }
 };
+
+/* ---- GAME CODE BELOW IS 100% UNCHANGED ---- */
 
 function startGame(){
   playing = true;
