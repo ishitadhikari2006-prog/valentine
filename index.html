@@ -4,25 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Valentine Game</title>
-
 <style>
+/* FIX FULLSCREEN AND NO SCROLL FOR MOBILE & DESKTOP */
 html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
   margin: 0;
   padding: 0;
-  touch-action: none;
-  overscroll-behavior: none;
+  touch-action: none;       /* prevent swipe scrolling */
+  overscroll-behavior: none; /* prevent bounce/overscroll */
 }
-
 *{margin:0;padding:0;box-sizing:border-box;}
-
-body{
-  font-family:Arial,sans-serif;
-  background:#fff;
-  color:#000;
-}
+body{font-family:Arial,sans-serif;background:#fff;color:#000;}
 
 /* SCREENS */
 .screen{
@@ -35,10 +29,9 @@ body{
   text-align:center;
   padding:20px;
 }
-
 .hidden{display:none!important;}
 
-/* BUTTONS */
+/* BUTTONS - UPDATED FOR VERTICAL STACK */
 button{
   padding:16px 36px;
   font-size:1.2rem;
@@ -46,21 +39,17 @@ button{
   border-radius:14px;
   cursor:pointer;
   transition:transform .2s;
+  width: 200px; /* Optional: Makes buttons same width */
 }
-
 #yesBtn{background:#ff5fa2;color:#fff;}
 #noBtn{background:#444;color:#fff;}
 
-/* FIRST SCREEN BUTTON STACK (ONLY CHANGE) */
-.single-buttons{
+.buttons{
   display:flex;
-  flex-direction:column;
-  align-items:center;
-  margin-top:14px;
-}
-
-.single-buttons button{
-  margin:18px 0;
+  flex-direction: column; /* Stacks items vertically */
+  align-items: center;    /* Centers items horizontally */
+  gap:20px;               /* Gap between YES and NO */
+  margin-top:30px;        /* Gap between Text and YES */
 }
 
 /* GAME AREA */
@@ -95,7 +84,6 @@ button{
   height:90px;
   background:black;
 }
-
 #finishText{
   position:absolute;
   bottom:180px;
@@ -138,13 +126,11 @@ button{
 }
 </style>
 </head>
-
 <body>
 
 <div id="start" class="screen">
   <h2>Do you accept your bf is always right in every argument and you wanna be his Valentine 😼❤️</h2>
-
-  <div class="single-buttons">
+  <div class="buttons">
     <button id="yesBtn">YES</button>
     <button id="noBtn">NO</button>
   </div>
@@ -158,7 +144,6 @@ button{
 
 <img id="gojo" src="gojo.png">
 <div id="purple"></div>
-
 <video id="introVideo" src="intro.mp4"></video>
 
 <audio id="gameMusic" src="game-music.mp3" loop preload="auto"></audio>
@@ -185,7 +170,6 @@ let vy = 0;
 let obstacles = [];
 let passed = 0;
 let playing = false;
-
 let gameInterval, loopId, purpleInterval;
 
 yesBtn.onclick = () => {
@@ -196,6 +180,7 @@ yesBtn.onclick = () => {
 
 noBtn.onclick = () => {
   noCount++;
+  // Fixed backticks for template literals
   noBtn.style.transform = `scale(${Math.max(.2,1-noCount*.06)})`;
   yesBtn.style.transform = `scale(${1+noCount*.08})`;
 
@@ -321,9 +306,10 @@ function showFinalOptions(){
   purple.style.display = 'none';
 
   end.classList.remove('hidden');
+  // Fixed backticks for multi-line HTML string
   end.innerHTML = `
     <h2>Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️</h2>
-    <div class="single-buttons">
+    <div class="buttons">
       <button onclick="finalYes()" style="background:#ff5fa2;color:#fff;">YES</button>
       <button onclick="restartGame()" style="background:#444;color:#fff;">RESTART</button>
     </div>
@@ -351,6 +337,5 @@ window.restartGame = () => {
   startGame();
 };
 </script>
-
 </body>
 </html>
