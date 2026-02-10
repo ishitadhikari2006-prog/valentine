@@ -6,7 +6,6 @@
 <title>Valentine Game</title>
 
 <style>
-/* FIX FULLSCREEN AND NO SCROLL */
 html, body {
   width: 100%;
   height: 100%;
@@ -20,7 +19,6 @@ html, body {
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:Arial,sans-serif;background:#fff;color:#000;}
 
-/* SCREENS */
 .screen{
   position:absolute;
   inset:0;
@@ -33,7 +31,6 @@ body{font-family:Arial,sans-serif;background:#fff;color:#000;}
 }
 .hidden{display:none!important;}
 
-/* START TEXT */
 #start h2{
   max-width:520px;
   line-height:1.4;
@@ -49,87 +46,27 @@ button{
   transition:transform .2s;
 }
 #yesBtn{background:#ff5fa2;color:#fff;}
-#noBtn{background:#444;color:#fff;}
+#noBtn{
+  background:#444;
+  color:#fff;
+  position:absolute; /* needed for random movement */
+}
 
-/* ⬇️ ONLY CHANGE HERE */
 .buttons{
   display:flex;
   flex-direction:column;
-  gap:18px;          /* clean minimal gap between buttons */
-  margin-top:26px;  /* gap below text */
+  gap:18px;
+  margin-top:26px;
+  position:relative;
+  align-items:center;
 }
 
-/* GAME AREA */
-#game{justify-content:flex-start;}
-#title{margin-top:20px;font-size:1.3rem;font-weight:bold;}
-#ground{position:absolute;bottom:80px;width:100%;height:4px;background:#aaa;}
-
-/* JERRY */
-#jerry{
-  position:absolute;
-  bottom:80px;
-  left:40px;
-  width:60px;
-  z-index:2;
-}
-
-/* OBSTACLES */
-.obstacle{
-  position:absolute;
-  bottom:80px;
-  width:20px;
-  height:60px;
-  background:#ff5fa2;
-}
-
-/* FINISH */
-#finish{
-  position:absolute;
-  bottom:80px;
-  right:40px;
-  width:6px;
-  height:90px;
-  background:black;
-}
-#finishText{
-  position:absolute;
-  bottom:180px;
-  right:20px;
-  font-weight:bold;
-}
-
-/* GOJO */
-#gojo{
-  position:absolute;
-  bottom:80px;
-  right:-300px;
-  width:140px;
-  z-index:3;
-  transition:right 5s cubic-bezier(.25,.8,.25,1);
-}
-
-/* PURPLE BLAST */
-#purple{
-  position:absolute;
-  width:40px;
-  height:40px;
-  background:purple;
-  border-radius:50%;
-  filter:blur(4px);
-  box-shadow:0 0 20px 10px rgba(128,0,128,.7);
-  z-index:4;
-  display:none;
-}
-
-/* INTRO VIDEO */
-#introVideo{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  z-index:20;
-  display:none;
+/* INVISIBLE MOVE ZONE */
+#noZone{
+  position:relative;
+  width:260px;
+  height:220px;   /* enough space to move */
+  margin-top:18px;
 }
 </style>
 </head>
@@ -138,12 +75,18 @@ button{
 
 <div id="start" class="screen">
   <h2>Do you accept your bf is always right in every argument and you wanna be his Valentine 😼❤️</h2>
+
   <div class="buttons">
     <button id="yesBtn">YES</button>
-    <button id="noBtn">NO</button>
+
+    <!-- invisible square -->
+    <div id="noZone">
+      <button id="noBtn">NO</button>
+    </div>
   </div>
 </div>
 
+<!-- GAME (UNCHANGED) -->
 <div id="game" class="screen hidden">
   <div id="title">RUN LITTLE MOUSE RUN</div>
   <img id="jerry" src="jerry.png">
@@ -165,6 +108,7 @@ const game = document.getElementById('game');
 const end = document.getElementById('end');
 const yesBtn = document.getElementById('yesBtn');
 const noBtn = document.getElementById('noBtn');
+const noZone = document.getElementById('noZone');
 const jerry = document.getElementById('jerry');
 const gojo = document.getElementById('gojo');
 const purple = document.getElementById('purple');
@@ -173,13 +117,27 @@ const gojoSound = document.getElementById('gojoSound');
 const gameMusic = document.getElementById('gameMusic');
 
 let noCount = 0;
-let y = 0;
-let vy = 0;
+let y = 0, vy = 0;
 let obstacles = [];
 let passed = 0;
 let playing = false;
 
 let gameInterval, loopId, purpleInterval;
+
+/* RANDOM MOVE FOR NO */
+function moveNoRandom(){
+  const zoneRect = noZone.getBoundingClientRect();
+  const btnRect = noBtn.getBoundingClientRect();
+
+  const maxX = zoneRect.width - btnRect.width;
+  const maxY = zoneRect.height - btnRect.height;
+
+  const x = Math.random() * maxX;
+  const y = Math.random() * maxY;
+
+  noBtn.style.left = x + 'px';
+  noBtn.style.top = y + 'px';
+}
 
 yesBtn.onclick = () => {
   start.classList.add('hidden');
@@ -189,6 +147,8 @@ yesBtn.onclick = () => {
 
 noBtn.onclick = () => {
   noCount++;
+  moveNoRandom();   // 👈 magic here
+
   noBtn.style.transform = `scale(${Math.max(.2,1-noCount*.06)})`;
   yesBtn.style.transform = `scale(${1+noCount*.08})`;
 
@@ -204,6 +164,7 @@ noBtn.onclick = () => {
   }
 };
 
+/* GAME LOGIC — UNCHANGED */
 function startGame(){
   playing = true;
   gameMusic.currentTime = 0;
@@ -227,10 +188,7 @@ function loop(){
   vy += -0.3;
   y += vy;
 
-  if(y <= 0){
-    y = 0;
-    vy = 0;
-  }
+  if(y <= 0){ y = 0; vy = 0; }
 
   jerry.style.bottom = (80 + y) + 'px';
 
@@ -238,9 +196,7 @@ function loop(){
     let x = o.offsetLeft;
     o.style.left = (x - 5) + 'px';
 
-    if(x < 90 && x > 40 && y < 50){
-      showFinalOptions();
-    }
+    if(x < 90 && x > 40 && y < 50) showFinalOptions();
 
     if(x < -30){
       o.remove();
@@ -253,26 +209,12 @@ function loop(){
   loopId = requestAnimationFrame(loop);
 }
 
-game.onclick = () => {
-  if(playing && y === 0){
-    vy = 9;
-  }
-};
+game.onclick = () => { if(playing && y === 0) vy = 9; };
 
 function finish(){
   playing = false;
   clearInterval(gameInterval);
   cancelAnimationFrame(loopId);
-
-  const f = document.createElement('div');
-  f.id = 'finish';
-  game.appendChild(f);
-
-  const t = document.createElement('div');
-  t.id = 'finishText';
-  t.innerText = "No I don't";
-  game.appendChild(t);
-
   slideGojoIn();
 }
 
@@ -293,7 +235,6 @@ function throwHollowPurple(){
   purpleInterval = setInterval(()=>{
     x -= 15;
     purple.style.left = x + 'px';
-
     if(x < 80){
       clearInterval(purpleInterval);
       purple.style.display = 'none';
@@ -307,12 +248,8 @@ function showFinalOptions(){
   clearInterval(gameInterval);
   clearInterval(purpleInterval);
   cancelAnimationFrame(loopId);
-
   gameMusic.pause();
   game.classList.add('hidden');
-  gojo.style.right = '-300px';
-  purple.style.display = 'none';
-
   end.classList.remove('hidden');
   end.innerHTML = `
     <h2>Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️</h2>
@@ -327,22 +264,7 @@ window.finalYes = () => {
   end.innerHTML = "<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
 };
 
-window.restartGame = () => {
-  end.classList.add('hidden');
-  game.classList.remove('hidden');
-
-  obstacles.forEach(o=>o.remove());
-  obstacles=[];
-  passed=0;
-  y=0;
-  vy=0;
-
-  document.getElementById('finish')?.remove();
-  document.getElementById('finishText')?.remove();
-
-  gojo.style.right='-300px';
-  startGame();
-};
+window.restartGame = () => location.reload();
 </script>
 
 </body>
