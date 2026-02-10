@@ -6,7 +6,6 @@
 <title>Valentine Game</title>
 
 <style>
-/* FIX FULLSCREEN AND NO SCROLL */
 html, body {
   width: 100%;
   height: 100%;
@@ -18,7 +17,12 @@ html, body {
 }
 
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:Arial,sans-serif;background:#fff;color:#000;}
+
+body{
+  font-family:Arial,sans-serif;
+  background:#fff;
+  color:#000;
+}
 
 /* SCREENS */
 .screen{
@@ -31,19 +35,8 @@ body{font-family:Arial,sans-serif;background:#fff;color:#000;}
   text-align:center;
   padding:20px;
 }
+
 .hidden{display:none!important;}
-
-/* 🔹 FIRST SCREEN FIX (ONLY THIS PART) */
-#start h2{
-  margin-bottom:30px;   /* gap below text */
-  line-height:1.4;
-}
-
-#start .buttons{
-  display:flex;
-  flex-direction:column; /* YES then NO */
-  gap:20px;              /* gap between buttons */
-}
 
 /* BUTTONS */
 button{
@@ -53,11 +46,22 @@ button{
   border-radius:14px;
   cursor:pointer;
   transition:transform .2s;
-  width:160px;           /* prevents overlap */
 }
 
 #yesBtn{background:#ff5fa2;color:#fff;}
 #noBtn{background:#444;color:#fff;}
+
+/* FIRST SCREEN BUTTON STACK (ONLY CHANGE) */
+.single-buttons{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  margin-top:30px;
+}
+
+.single-buttons button{
+  margin:18px 0;
+}
 
 /* GAME AREA */
 #game{justify-content:flex-start;}
@@ -91,6 +95,7 @@ button{
   height:90px;
   background:black;
 }
+
 #finishText{
   position:absolute;
   bottom:180px;
@@ -108,7 +113,7 @@ button{
   transition:right 5s cubic-bezier(.25,.8,.25,1);
 }
 
-/* PURPLE */
+/* PURPLE BLAST */
 #purple{
   position:absolute;
   width:40px;
@@ -138,7 +143,8 @@ button{
 
 <div id="start" class="screen">
   <h2>Do you accept your bf is always right in every argument and you wanna be his Valentine 😼❤️</h2>
-  <div class="buttons">
+
+  <div class="single-buttons">
     <button id="yesBtn">YES</button>
     <button id="noBtn">NO</button>
   </div>
@@ -152,6 +158,7 @@ button{
 
 <img id="gojo" src="gojo.png">
 <div id="purple"></div>
+
 <video id="introVideo" src="intro.mp4"></video>
 
 <audio id="gameMusic" src="game-music.mp3" loop preload="auto"></audio>
@@ -160,7 +167,6 @@ button{
 <div id="end" class="screen hidden"></div>
 
 <script>
-/* 🔴 JS IS 100% UNTOUCHED */
 const start = document.getElementById('start');
 const game = document.getElementById('game');
 const end = document.getElementById('end');
@@ -191,7 +197,7 @@ yesBtn.onclick = () => {
 noBtn.onclick = () => {
   noCount++;
   noBtn.style.transform = `scale(${Math.max(.2,1-noCount*.06)})`;
-  yesBtn.style.transform = `scale(${1+noCount*.08)})`;
+  yesBtn.style.transform = `scale(${1+noCount*.08})`;
 
   if(noCount === 14){
     introVideo.style.display = 'block';
@@ -203,6 +209,146 @@ noBtn.onclick = () => {
       startGame();
     };
   }
+};
+
+function startGame(){
+  playing = true;
+  gameMusic.currentTime = 0;
+  gameMusic.play();
+  gameInterval = setInterval(spawnObstacle,1500);
+  loopId = requestAnimationFrame(loop);
+}
+
+function spawnObstacle(){
+  if(!playing) return;
+  const o = document.createElement('div');
+  o.className = 'obstacle';
+  o.style.left = '100%';
+  game.appendChild(o);
+  obstacles.push(o);
+}
+
+function loop(){
+  if(!playing) return;
+
+  vy += -0.3;
+  y += vy;
+
+  if(y <= 0){
+    y = 0;
+    vy = 0;
+  }
+
+  jerry.style.bottom = (80 + y) + 'px';
+
+  obstacles.forEach((o,i)=>{
+    let x = o.offsetLeft;
+    o.style.left = (x - 5) + 'px';
+
+    if(x < 90 && x > 40 && y < 50){
+      showFinalOptions();
+    }
+
+    if(x < -30){
+      o.remove();
+      obstacles.splice(i,1);
+      passed++;
+      if(passed === 14) finish();
+    }
+  });
+
+  loopId = requestAnimationFrame(loop);
+}
+
+game.onclick = () => {
+  if(playing && y === 0){
+    vy = 9;
+  }
+};
+
+function finish(){
+  playing = false;
+  clearInterval(gameInterval);
+  cancelAnimationFrame(loopId);
+
+  const f = document.createElement('div');
+  f.id = 'finish';
+  game.appendChild(f);
+
+  const t = document.createElement('div');
+  t.id = 'finishText';
+  t.innerText = "No I don't";
+  game.appendChild(t);
+
+  slideGojoIn();
+}
+
+function slideGojoIn(){
+  gameMusic.pause();
+  gojoSound.currentTime = 0;
+  gojoSound.play();
+  gojo.style.right = '50px';
+  setTimeout(throwHollowPurple,4000);
+}
+
+function throwHollowPurple(){
+  purple.style.display = 'block';
+  let x = window.innerWidth - 150;
+  purple.style.left = x + 'px';
+  purple.style.bottom = '140px';
+
+  purpleInterval = setInterval(()=>{
+    x -= 15;
+    purple.style.left = x + 'px';
+
+    if(x < 80){
+      clearInterval(purpleInterval);
+      purple.style.display = 'none';
+      showFinalOptions();
+    }
+  },16);
+}
+
+function showFinalOptions(){
+  playing = false;
+  clearInterval(gameInterval);
+  clearInterval(purpleInterval);
+  cancelAnimationFrame(loopId);
+
+  gameMusic.pause();
+  game.classList.add('hidden');
+  gojo.style.right = '-300px';
+  purple.style.display = 'none';
+
+  end.classList.remove('hidden');
+  end.innerHTML = `
+    <h2>Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️</h2>
+    <div class="single-buttons">
+      <button onclick="finalYes()" style="background:#ff5fa2;color:#fff;">YES</button>
+      <button onclick="restartGame()" style="background:#444;color:#fff;">RESTART</button>
+    </div>
+  `;
+}
+
+window.finalYes = () => {
+  end.innerHTML = "<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
+};
+
+window.restartGame = () => {
+  end.classList.add('hidden');
+  game.classList.remove('hidden');
+
+  obstacles.forEach(o=>o.remove());
+  obstacles=[];
+  passed=0;
+  y=0;
+  vy=0;
+
+  document.getElementById('finish')?.remove();
+  document.getElementById('finishText')?.remove();
+
+  gojo.style.right='-300px';
+  startGame();
 };
 </script>
 
