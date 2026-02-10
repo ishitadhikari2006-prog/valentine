@@ -13,8 +13,8 @@ html, body {
   overflow: hidden;
   margin: 0;
   padding: 0;
-  touch-action: none;
-  overscroll-behavior: none;
+  touch-action: none;       /* prevent swipe scrolling */
+  overscroll-behavior: none; /* prevent bounce/overscroll */
 }
 
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -33,30 +33,31 @@ body{font-family:Arial,sans-serif;background:#fff;color:#000;}
 }
 .hidden{display:none!important;}
 
-/* FIRST SCREEN TEXT & BUTTON LAYOUT */
+/* FIRST SCREEN TEXT & BUTTON LAYOUT FIX */
 #start h2 {
-  margin-bottom: 40px;  /* GAP BELOW TEXT */
+  margin-bottom: 50px;  /* gap below text */
   font-size: 1.2rem;
   line-height: 1.4;
 }
 
 #start .buttons {
-  display:flex;
-  flex-direction: column;   /* STACK vertically */
-  gap: 20px;                /* GAP BETWEEN YES & NO */
+  display: flex;
+  flex-direction: column; /* stack buttons vertically */
+  gap: 20px;              /* gap between YES & NO buttons */
+  align-items: center;     /* center horizontally */
 }
 
-#yesBtn, #noBtn {
-  width: 160px;             /* FIXED BUTTON WIDTH */
-  text-align: center;
+/* BUTTONS */
+button{
   padding:16px 0;
+  width:160px;             /* fixed width */
   font-size:1.2rem;
   border:none;
   border-radius:14px;
   cursor:pointer;
   transition:transform .2s;
+  text-align:center;
 }
-
 #yesBtn{background:#ff5fa2;color:#fff;}
 #noBtn{background:#444;color:#fff;}
 
