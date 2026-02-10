@@ -2,17 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Valentine Game</title>
 
 <style>
-/* FIX FULLSCREEN AND NO SCROLL */
+/* FIX FULLSCREEN AND NO SCROLL FOR MOBILE & DESKTOP */
 html, body {
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
   margin: 0;
   padding: 0;
+  touch-action: none;       /* prevent swipe scrolling */
+  overscroll-behavior: none; /* prevent bounce/overscroll */
 }
 
 *{margin:0;padding:0;box-sizing:border-box;}
