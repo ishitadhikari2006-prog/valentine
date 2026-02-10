@@ -27,7 +27,7 @@ button{
   border:none;
   border-radius:14px;
   cursor:pointer;
-  transition:transform .2s, left .3s ease, top .3s ease; /* smooth left/top */
+  transition:transform .2s;
 }
 #yesBtn{background:#ff5fa2;color:#fff;}
 #noBtn{background:#444;color:#fff;}
@@ -37,7 +37,7 @@ button{
   display:flex;
   flex-direction:column;
   align-items:center;
-  gap:18px;
+  gap:18px; /* small gap between YES and NO */
   margin-top:30px;
 }
 
@@ -112,10 +112,8 @@ button{
 <body>
 
 <div id="start" class="screen">
-  <h2 id="question">
-    Do you accept your bf is always right in every argument and you wanna be his Valentine 😼❤️
-  </h2>
-  <div class="buttons">
+  <h2>Do you accept your bf is always right in every argument and you wanna be his Valentine 😼❤️</h2>
+  <div class="buttons" id="buttonArea">
     <button id="yesBtn">YES</button>
     <button id="noBtn">NO</button>
   </div>
@@ -142,6 +140,7 @@ const game = document.getElementById('game');
 const end = document.getElementById('end');
 const yesBtn = document.getElementById('yesBtn');
 const noBtn = document.getElementById('noBtn');
+const buttonArea = document.getElementById('buttonArea');
 
 const jerry = document.getElementById('jerry');
 const gojo = document.getElementById('gojo');
@@ -159,10 +158,6 @@ let playing = false;
 
 let gameInterval, loopId, purpleInterval;
 
-// Safe area for NO button
-let box = null;
-let noPos = { x: 0, y: 0 };
-
 yesBtn.onclick = () => {
   start.classList.add('hidden');
   end.classList.remove('hidden');
@@ -172,43 +167,26 @@ yesBtn.onclick = () => {
 noBtn.onclick = () => {
   noCount++;
 
-  // shrink
+  // SAME shrinking logic (unchanged)
   noBtn.style.transform = `scale(${Math.max(.2,1-noCount*.06)})`;
   yesBtn.style.transform = `scale(${1+noCount*.08})`;
 
-  if(!box){
-    const yesRect = yesBtn.getBoundingClientRect();
-    const noRect = noBtn.getBoundingClientRect();
+  // SAFE POSITION CHANGE
+  const areaRect = buttonArea.getBoundingClientRect();
+  const noRect = noBtn.getBoundingClientRect();
 
-    // Safe box inside screen
-    box = {
-      minX: 20,
-      maxX: window.innerWidth - noRect.width - 20,
-      minY: yesRect.bottom + 10,
-      maxY: window.innerHeight - noRect.height - 20
-    };
+  const minX = 10;
+  const maxX = window.innerWidth - noRect.width - 10;
 
-    noPos.x = noRect.left;
-    noPos.y = noRect.top;
+  const minY = areaRect.bottom + 10; // always below YES + text
+  const maxY = window.innerHeight - noRect.height - 20;
 
-    noBtn.style.position = 'fixed';
-  }
+  const x = Math.random() * (maxX - minX) + minX;
+  const y = Math.random() * (maxY - minY) + minY;
 
-  // smooth random movement inside screen box
-  const dx = (Math.random() * 80) - 40; // left/right
-  const dy = (Math.random() * 80) - 40; // up/down
-
-  noPos.x += dx;
-  noPos.y += dy;
-
-  // clamp inside box
-  if(noPos.x < box.minX) noPos.x = box.minX;
-  if(noPos.x > box.maxX) noPos.x = box.maxX;
-  if(noPos.y < box.minY) noPos.y = box.minY;
-  if(noPos.y > box.maxY) noPos.y = box.maxY;
-
-  noBtn.style.left = noPos.x + 'px';
-  noBtn.style.top = noPos.y + 'px';
+  noBtn.style.position = 'fixed';
+  noBtn.style.left = x + 'px';
+  noBtn.style.top = y + 'px';
 
   if(noCount === 14){
     introVideo.style.display = 'block';
@@ -222,7 +200,6 @@ noBtn.onclick = () => {
   }
 };
 
-// ---------- GAME FUNCTIONS ----------
 function startGame(){
   playing = true;
   gameMusic.currentTime = 0;
@@ -242,60 +219,98 @@ function spawnObstacle(){
 
 function loop(){
   if(!playing) return;
+
   vy += -0.3;
   y += vy;
-  if(y <= 0){ y=0; vy=0; }
+
+  if(y <= 0){
+    y = 0;
+    vy = 0;
+  }
+
   jerry.style.bottom = (80 + y) + 'px';
+
   obstacles.forEach((o,i)=>{
     let x = o.offsetLeft;
     o.style.left = (x - 5) + 'px';
-    if(x < 90 && x > 40 && y < 50){ showFinalOptions(); }
-    if(x < -30){ o.remove(); obstacles.splice(i,1); passed++; if(passed===14) finish(); }
+
+    if(x < 90 && x > 40 && y < 50){
+      showFinalOptions();
+    }
+
+    if(x < -30){
+      o.remove();
+      obstacles.splice(i,1);
+      passed++;
+      if(passed === 14) finish();
+    }
   });
+
   loopId = requestAnimationFrame(loop);
 }
 
-game.onclick = () => { if(playing && y===0) vy=9; }
+game.onclick = () => {
+  if(playing && y === 0){
+    vy = 9;
+  }
+};
 
 function finish(){
-  playing=false;
+  playing = false;
   clearInterval(gameInterval);
   cancelAnimationFrame(loopId);
-  const f=document.createElement('div'); f.id='finish'; game.appendChild(f);
-  const t=document.createElement('div'); t.id='finishText'; t.innerText="No I don't"; game.appendChild(t);
+
+  const f = document.createElement('div');
+  f.id = 'finish';
+  game.appendChild(f);
+
+  const t = document.createElement('div');
+  t.id = 'finishText';
+  t.innerText = "No I don't";
+  game.appendChild(t);
+
   slideGojoIn();
 }
 
 function slideGojoIn(){
   gameMusic.pause();
-  gojoSound.currentTime=0;
+  gojoSound.currentTime = 0;
   gojoSound.play();
-  gojo.style.right='50px';
+  gojo.style.right = '50px';
   setTimeout(throwHollowPurple,4000);
 }
 
 function throwHollowPurple(){
-  purple.style.display='block';
-  let x=window.innerWidth-150;
-  purple.style.left=x+'px';
-  purple.style.bottom='140px';
-  purpleInterval=setInterval(()=>{
-    x-=15; purple.style.left=x+'px';
-    if(x<80){ clearInterval(purpleInterval); purple.style.display='none'; showFinalOptions(); }
+  purple.style.display = 'block';
+  let x = window.innerWidth - 150;
+  purple.style.left = x + 'px';
+  purple.style.bottom = '140px';
+
+  purpleInterval = setInterval(()=>{
+    x -= 15;
+    purple.style.left = x + 'px';
+
+    if(x < 80){
+      clearInterval(purpleInterval);
+      purple.style.display = 'none';
+      showFinalOptions();
+    }
   },16);
 }
 
 function showFinalOptions(){
-  playing=false;
+  playing = false;
   clearInterval(gameInterval);
   clearInterval(purpleInterval);
   cancelAnimationFrame(loopId);
+
   gameMusic.pause();
   game.classList.add('hidden');
-  gojo.style.right='-300px';
-  purple.style.display='none';
+  gojo.style.right = '-300px';
+  purple.style.display = 'none';
+
   end.classList.remove('hidden');
-  end.innerHTML=`
+  end.innerHTML = `
     <h2>Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️</h2>
     <div class="buttons">
       <button onclick="finalYes()" style="background:#ff5fa2;color:#fff;">YES</button>
@@ -304,15 +319,23 @@ function showFinalOptions(){
   `;
 }
 
-window.finalYes=()=>{ end.innerHTML="<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>"; }
+window.finalYes = () => {
+  end.innerHTML = "<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
+};
 
-window.restartGame=()=>{
+window.restartGame = () => {
   end.classList.add('hidden');
   game.classList.remove('hidden');
-  obstacles.forEach(o=>o.remove()); obstacles=[];
-  passed=0; y=0; vy=0;
+
+  obstacles.forEach(o=>o.remove());
+  obstacles=[];
+  passed=0;
+  y=0;
+  vy=0;
+
   document.getElementById('finish')?.remove();
   document.getElementById('finishText')?.remove();
+
   gojo.style.right='-300px';
   startGame();
 };
