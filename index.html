@@ -6,14 +6,15 @@
 <title>Valentine Game</title>
 
 <style>
+/* FIX FULLSCREEN AND NO SCROLL FOR MOBILE & DESKTOP */
 html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
   margin: 0;
   padding: 0;
-  touch-action: none;
-  overscroll-behavior: none;
+  touch-action: none;       /* prevent swipe scrolling */
+  overscroll-behavior: none; /* prevent bounce/overscroll */
 }
 
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -39,21 +40,12 @@ button{
   border:none;
   border-radius:14px;
   cursor:pointer;
-  transition:transform .2s, left .2s, top .2s;
-  position:absolute;
+  transition:transform .2s, top .2s, left .2s;
+  position: relative; /* allow movement inside container */
 }
-#yesBtn{
-  background:#ff5fa2;color:#fff;
-}
-#noBtn{
-  background:#444;color:#fff;
-}
-.buttons{
-  display:flex;
-  flex-direction:column;
-  gap:20px;
-  position:relative;
-}
+#yesBtn{background:#ff5fa2;color:#fff;margin-top:20px;}
+#noBtn{background:#444;color:#fff;margin-top:20px;}
+.buttons{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:20px;}
 
 /* GAME AREA */
 #game{justify-content:flex-start;}
@@ -148,7 +140,10 @@ button{
 <div id="purple"></div>
 <video id="introVideo" src="intro.mp4"></video>
 
+<!-- 🔊 GAME BACKGROUND MUSIC -->
 <audio id="gameMusic" src="game-music.mp3" loop preload="auto"></audio>
+
+<!-- 🔊 GOJO ENTRY SOUND -->
 <audio id="gojoSound" src="gojo-entry.mp3" preload="auto"></audio>
 
 <div id="end" class="screen hidden"></div>
@@ -172,16 +167,8 @@ let vy = 0;
 let obstacles = [];
 let passed = 0;
 let playing = false;
+
 let gameInterval, loopId, purpleInterval;
-
-yesBtn.style.position = 'absolute';
-yesBtn.style.top = '40%';
-yesBtn.style.left = '50%';
-yesBtn.style.transform = 'translateX(-50%)';
-
-noBtn.style.top = '55%';
-noBtn.style.left = '50%';
-noBtn.style.transform = 'translateX(-50%)';
 
 yesBtn.onclick = () => {
   start.classList.add('hidden');
@@ -191,29 +178,28 @@ yesBtn.onclick = () => {
 
 noBtn.onclick = () => {
   noCount++;
-  // shrink button
-  noBtn.style.transform = `translateX(-50%) scale(${Math.max(0.2,1-noCount*0.06)})`;
+  noBtn.style.transform = `scale(${Math.max(.2,1-noCount*.06)})`;
 
-  // reposition randomly within visible screen limits
-  const btnRect = noBtn.getBoundingClientRect();
+  // move NO button randomly inside screen but not overlapping YES and text
+  const parentRect = start.getBoundingClientRect();
   const yesRect = yesBtn.getBoundingClientRect();
-  const padding = 10;
+  const textHeight = start.querySelector('h2').getBoundingClientRect().height;
 
-  const maxX = window.innerWidth - btnRect.width - padding;
-  const maxY = window.innerHeight - btnRect.height - padding;
+  const noWidth = noBtn.offsetWidth * parseFloat(noBtn.style.transform.replace('scale(','').replace(')','') || 1);
+  const noHeight = noBtn.offsetHeight * parseFloat(noBtn.style.transform.replace('scale(','').replace(')','') || 1);
 
-  let newX, newY;
+  // limits to stay inside screen
+  const minX = 0;
+  const maxX = parentRect.width - noWidth;
+  const minY = textHeight + yesRect.height + 20; // below YES button
+  const maxY = parentRect.height - noHeight - 20;
 
-  do {
-    newX = Math.random() * maxX;
-    newY = Math.random() * maxY;
-  } while (
-    newY < yesRect.bottom + padding || // don't go above YES button
-    newY + btnRect.height > window.innerHeight - padding
-  );
+  const newX = Math.random() * (maxX - minX) + minX;
+  const newY = Math.random() * (maxY - minY) + minY;
 
-  noBtn.style.left = newX + 'px';
-  noBtn.style.top = newY + 'px';
+  noBtn.style.position = 'absolute';
+  noBtn.style.left = `${newX}px`;
+  noBtn.style.top = `${newY}px`;
 
   if(noCount === 14){
     introVideo.style.display = 'block';
@@ -230,7 +216,7 @@ noBtn.onclick = () => {
 function startGame(){
   playing = true;
   gameMusic.currentTime = 0;
-  gameMusic.play();
+  gameMusic.play();               // ▶️ START GAME SONG
   gameInterval = setInterval(spawnObstacle,1500);
   loopId = requestAnimationFrame(loop);
 }
@@ -300,7 +286,7 @@ function finish(){
 }
 
 function slideGojoIn(){
-  gameMusic.pause();
+  gameMusic.pause();              // ⏹️ STOP GAME SONG
   gojoSound.currentTime = 0;
   gojoSound.play();
   gojo.style.right = '50px';
@@ -331,7 +317,7 @@ function showFinalOptions(){
   clearInterval(purpleInterval);
   cancelAnimationFrame(loopId);
 
-  gameMusic.pause();
+  gameMusic.pause();              // ⏹️ SAFETY STOP
   game.classList.add('hidden');
   gojo.style.right = '-300px';
   purple.style.display = 'none';
