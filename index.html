@@ -242,7 +242,7 @@ function spawnObstacle(){
 function loop(){
   if(!playing) return;
 
-  vy += -0.3;
+  vy += -0.2;
   y += vy;
 
   if(y <= 0){
@@ -299,7 +299,7 @@ function slideGojoIn(){
   gojoSound.currentTime = 0;
   gojoSound.play();
   gojo.style.right = '50px';
-  setTimeout(throwHollowPurple,4000);
+  setTimeout(throwHollowPurple,5000);
 }
 
 function throwHollowPurple(){
