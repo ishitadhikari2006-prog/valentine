@@ -97,11 +97,9 @@ button{padding:16px 36px;font-size:1.2rem;border:none;border-radius:14px;cursor:
 <div id="purple"></div>            
 <video id="introVideo" src="intro.mp4"></video>            
             
+<audio id="startMusic" src="start-music.mp3" loop></audio>
 <audio id="gameMusic" src="game-music.mp3" loop preload="auto"></audio>            
-<audio id="gojoSound" src="gojo-entry.mp3" preload="auto"></audio>
-
-<!-- ✅ NEW MENU MUSIC -->
-<audio id="menuMusic" src="menu-music.mp3" loop preload="auto"></audio>
+<audio id="gojoSound" src="gojo-entry.mp3" preload="auto"></audio>            
             
 <div id="end" class="screen hidden"></div>            
             
@@ -117,8 +115,10 @@ const purple = document.getElementById('purple');
 const introVideo = document.getElementById('introVideo');            
 const gojoSound = document.getElementById('gojoSound');            
 const gameMusic = document.getElementById('gameMusic');            
-const menuMusic = document.getElementById('menuMusic');            
-            
+const startMusic = document.getElementById('startMusic');
+
+startMusic.play().catch(()=>{});
+
 let noCount = 0;            
 let y = 0;            
 let vy = 0;            
@@ -127,15 +127,9 @@ let passed = 0;
 let playing = false;            
             
 let gameInterval, loopId, purpleInterval;            
-
-/* ✅ AUTO PLAY MENU MUSIC ON FIRST USER INTERACTION */
-window.addEventListener("click", () => {
-  if(menuMusic.paused){
-    menuMusic.play().catch(()=>{});
-  }
-},{ once:true });
             
 yesBtn.onclick = () => {            
+  startMusic.pause();
   start.classList.add('hidden');            
   end.classList.remove('hidden');            
   end.innerHTML = "<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";            
@@ -160,9 +154,8 @@ noBtn.onclick = () => {
   noBtn.style.left = randX + "px";            
   noBtn.style.top = randY + "px";            
             
-  if(noCount === 14){  
-    menuMusic.pause();   /* ✅ STOP MENU MUSIC */
-    menuMusic.currentTime = 0;
+  if(noCount === 14){            
+    startMusic.pause();
     introVideo.style.display = 'block';            
     introVideo.play();            
     introVideo.onended = () => {            
@@ -239,6 +232,16 @@ function finish(){
   playing = false;            
   clearInterval(gameInterval);            
   cancelAnimationFrame(loopId);            
+            
+  const f = document.createElement('div');            
+  f.id = 'finish';            
+  game.appendChild(f);            
+            
+  const t = document.createElement('div');            
+  t.id = 'finishText';            
+  t.innerText = "No I don't";            
+  game.appendChild(t);            
+            
   slideGojoIn();            
 }            
             
@@ -274,9 +277,9 @@ function showFinalOptions(){
   clearInterval(purpleInterval);            
   cancelAnimationFrame(loopId);            
             
-  gameMusic.pause();  
-  menuMusic.currentTime = 0;
-  menuMusic.play();   /* ✅ PLAY MENU MUSIC AGAIN */
+  gameMusic.pause();            
+  startMusic.currentTime = 0;
+  startMusic.play();
             
   game.classList.add('hidden');            
   gojo.style.right = '-300px';            
@@ -293,11 +296,12 @@ function showFinalOptions(){
 }            
             
 window.finalYes = () => {            
+  startMusic.pause();
   end.innerHTML = "<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";            
 };            
             
 window.restartGame = () => {            
-  menuMusic.pause();
+  startMusic.pause();
   end.classList.add('hidden');            
   game.classList.remove('hidden');            
             
@@ -306,6 +310,9 @@ window.restartGame = () => {
   passed=0;            
   y=0;            
   vy=0;            
+            
+  document.getElementById('finish')?.remove();            
+  document.getElementById('finishText')?.remove();            
             
   gojo.style.right='-300px';            
   startGame();            
