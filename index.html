@@ -1,350 +1,251 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Valentine Game</title>
+<!DOCTYPE html>  
+<html lang="en">  
+<head>  
+<meta charset="UTF-8">  
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">  
+<title>Valentine Game</title>  
+  
+<style>  
+html, body {  
+  width: 100%;  
+  height: 100%;  
+  overflow: hidden;  
+  margin: 0;  
+  padding: 0;  
+  touch-action: none;  
+  overscroll-behavior: none;  
+}  
+  
+*{margin:0;padding:0;box-sizing:border-box;}  
+body{font-family:Arial,sans-serif;background:#fff;color:#000;}  
+  
+.screen{  
+  position:absolute;  
+  inset:0;  
+  display:flex;  
+  flex-direction:column;  
+  justify-content:center;  
+  align-items:center;  
+  text-align:center;  
+  padding:20px;  
+}  
+.hidden{display:none!important;}  
+  
+#start h2{max-width:520px;line-height:1.4;}  
+  
+button{padding:16px 36px;font-size:1.2rem;border:none;border-radius:14px;cursor:pointer;transition:transform .2s;}  
+#yesBtn{background:#ff5fa2;color:#fff;}  
+#noBtn{  
+  background:#444;  
+  color:#fff;  
+  position:absolute;  
+  top:72px;  
+  transition:left .35s cubic-bezier(.22,.61,.36,1), top .35s cubic-bezier(.22,.61,.36,1), transform .2s;  
+}  
+  
+.buttons{position:relative;display:flex;flex-direction:column;align-items:center;gap:20px;margin-top:30px;height:220px;width:100%;max-width:300px;}  
+  
+#game{justify-content:flex-start;}  
 
-<style>
-html, body {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  margin: 0;
-  padding: 0;
-  touch-action: none;
-  overscroll-behavior: none;
-}
-
-*{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:Arial,sans-serif;background:#fff;color:#000;}
-
-.screen{
-  position:absolute;
-  inset:0;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
+/* UPDATED TITLE STYLE */
+#title{
+  margin-top:20px;
+  font-weight:bold;
   text-align:center;
-  padding:20px;
+  max-width:90%;
+  line-height:1.5;
 }
-.hidden{display:none!important;}
+#title .main{font-size:1.4rem;}
+#title .sub{font-size:0.95rem;letter-spacing:1px;}
 
-#start h2{max-width:520px;line-height:1.4;}
-
-button{padding:16px 36px;font-size:1.2rem;border:none;border-radius:14px;cursor:pointer;transition:transform .2s;}
-#yesBtn{background:#ff5fa2;color:#fff;}
-#noBtn{
-  background:#444;
-  color:#fff;
-  position:absolute;
-  top:72px;
-  transition:left .35s cubic-bezier(.22,.61,.36,1), top .35s cubic-bezier(.22,.61,.36,1), transform .2s;
-}
-
-.buttons{position:relative;display:flex;flex-direction:column;align-items:center;gap:20px;margin-top:30px;height:220px;width:100%;max-width:300px;}
-
-#game{justify-content:flex-start;}
-#title{margin-top:20px;font-size:1.3rem;font-weight:bold;}
-  #subTitle{
-  font-size:0.8rem;
-  margin-top:6px;
-  letter-spacing:1px;
-  opacity:0.8;
-  }
-#ground{position:absolute;bottom:80px;width:100%;height:4px;background:#aaa;}
-
-#jerry{position:absolute;bottom:80px;left:40px;width:60px;z-index:2;}
-
-.obstacle{
-  position:absolute;
-  bottom:80px;
-  width:40px;
-  height:40px;
-  transform:rotate(-45deg);
-  background:#ff5fa2;
-}
-.obstacle::before,
-.obstacle::after{
-  content:'';
-  position:absolute;
-  width:40px;
-  height:40px;
-  background:#ff5fa2;
-  border-radius:50%;
-}
-.obstacle::before{top:-20px;left:0;}
-.obstacle::after{left:20px;top:0;}
-
-#finish{position:absolute;bottom:80px;right:40px;width:6px;height:90px;background:black;}
-#finishText{position:absolute;bottom:180px;right:20px;font-weight:bold;}
-
-#gojo{position:absolute;bottom:80px;right:-300px;width:140px;z-index:3;transition:right 5s cubic-bezier(.25,.8,.25,1);}
-
-#purple{position:absolute;width:40px;height:40px;background:purple;border-radius:50%;filter:blur(4px);box-shadow:0 0 20px 10px rgba(128,0,128,.7);z-index:4;display:none;}
-
-#introVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:20;display:none;}
-</style>
-</head>
-
-<body>
-
-<div id="start" class="screen">
-  <h2>Do you accept your bf is always right in every argument and you wanna be his Valentine 😼❤️</h2>
-  <div class="buttons">
-    <button id="yesBtn">YES</button>
-    <button id="noBtn">NO</button>
-  </div>
-</div>
-
-<div id="game" class="screen hidden">
+#ground{position:absolute;bottom:80px;width:100%;height:4px;background:#aaa;}  
+  
+#jerry{position:absolute;bottom:80px;left:40px;width:60px;z-index:2;}  
+  
+.obstacle{  
+  position:absolute;  
+  bottom:80px;  
+  width:40px;  
+  height:40px;  
+  transform:rotate(-45deg);  
+  background:#ff5fa2;  
+}  
+.obstacle::before,  
+.obstacle::after{  
+  content:'';  
+  position:absolute;  
+  width:40px;  
+  height:40px;  
+  background:#ff5fa2;  
+  border-radius:50%;  
+}  
+.obstacle::before{top:-20px;left:0;}  
+.obstacle::after{left:20px;top:0;}  
+  
+#finish{position:absolute;bottom:80px;right:40px;width:6px;height:90px;background:black;}  
+#finishText{position:absolute;bottom:180px;right:20px;font-weight:bold;}  
+  
+#gojo{position:absolute;bottom:80px;right:-300px;width:140px;z-index:3;transition:right 5s cubic-bezier(.25,.8,.25,1);}  
+  
+#purple{position:absolute;width:40px;height:40px;background:purple;border-radius:50%;filter:blur(4px);box-shadow:0 0 20px 10px rgba(128,0,128,.7);z-index:4;display:none;}  
+  
+#introVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:20;display:none;}  
+</style>  
+</head>  
+  
+<body>  
+  
+<div id="start" class="screen">  
+  <h2>Do you accept your bf is always right in every argument and you wanna be his Valentine 😼❤️</h2>  
+  <div class="buttons">  
+    <button id="yesBtn">YES</button>  
+    <button id="noBtn">NO</button>  
+  </div>  
+</div>  
+  
+<div id="game" class="screen hidden">  
   <div id="title">
-  RUN LITTLE MOUSE
-  <div id="subTitle">THE OPTION TO SAY NO IS AT THE END OF THE GAME</div>
-</div>
-  <img id="jerry" src="jerry.png">
-  <div id="ground"></div>
-</div>
+    <div class="main">RUN LITTLE MOUSE RUN</div>
+    <div class="sub">THE OPTION TO SAY ME NO IS AT THE END OF THIS GAME</div>
+  </div>
+  <img id="jerry" src="jerry.png">  
+  <div id="ground"></div>  
+</div>  
+  
+<img id="gojo" src="gojo.png">  
+<div id="purple"></div>  
+<video id="introVideo" src="intro.mp4"></video>  
+  
+<audio id="gameMusic" src="game-music.mp3" loop preload="auto"></audio>  
+<audio id="gojoSound" src="gojo-entry.mp3" preload="auto"></audio>  
+<audio id="menuMusic" src="menu-music.mp3" loop preload="auto"></audio>  
+  
+<div id="end" class="screen hidden"></div>  
+  
+<script>  
+/* JS UNCHANGED — YOUR GAME LOGIC REMAINS SAME */
+const start = document.getElementById('start');  
+const game = document.getElementById('game');  
+const end = document.getElementById('end');  
+const yesBtn = document.getElementById('yesBtn');  
+const noBtn = document.getElementById('noBtn');  
+const jerry = document.getElementById('jerry');  
+const gojo = document.getElementById('gojo');  
+const purple = document.getElementById('purple');  
+const introVideo = document.getElementById('introVideo');  
+const gojoSound = document.getElementById('gojoSound');  
+const gameMusic = document.getElementById('gameMusic');  
+const menuMusic = document.getElementById('menuMusic');  
 
-<img id="gojo" src="gojo.png">
-<div id="purple"></div>
-<video id="introVideo" src="intro.mp4"></video>
+let lastX = 0;  
+let lastY = 72;  
+let noCount = 0;  
+let y = 0;  
+let vy = 0;  
+let obstacles = [];  
+let passed = 0;  
+let playing = false;  
+let gameInterval, loopId, purpleInterval;  
 
-<audio id="gameMusic" src="game-music.mp3" loop preload="auto"></audio>
-<audio id="gojoSound" src="gojo-entry.mp3" preload="auto"></audio>
-<audio id="menuMusic" src="menu-music.mp3" loop preload="auto"></audio>
+document.body.addEventListener("click", ()=>{  
+  if(menuMusic.paused) menuMusic.play().catch(()=>{});  
+},{once:true});  
 
-<div id="end" class="screen hidden"></div>
+yesBtn.onclick = () => {  
+  start.classList.add('hidden');  
+  end.classList.remove('hidden');  
+  end.innerHTML = "<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";  
+};  
 
-<script>
-const start = document.getElementById('start');
-const game = document.getElementById('game');
-const end = document.getElementById('end');
-const yesBtn = document.getElementById('yesBtn');
-const noBtn = document.getElementById('noBtn');
-const jerry = document.getElementById('jerry');
-const gojo = document.getElementById('gojo');
-const purple = document.getElementById('purple');
-const introVideo = document.getElementById('introVideo');
-const gojoSound = document.getElementById('gojoSound');
-const gameMusic = document.getElementById('gameMusic');
-const menuMusic = document.getElementById('menuMusic');
+noBtn.onclick = () => {  
+  noCount++;  
+  noBtn.style.transform = `scale(${Math.max(.2,1-noCount*.06)})`;  
+  yesBtn.style.transform = `scale(${1+noCount*.08})`;  
 
-let lastX = 0;
-let lastY = 72;
+  const box = document.querySelector('.buttons');  
+  const padding = 10;  
+  const maxX = box.clientWidth - noBtn.offsetWidth - padding;  
+  const minY = yesBtn.offsetHeight + 20;  
+  const maxY = box.clientHeight - noBtn.offsetHeight - padding;  
 
-let noCount = 0;
-let y = 0;
-let vy = 0;
-let obstacles = [];
-let passed = 0;
-let playing = false;
+  let randX, randY, dist;  
+  do{  
+    randX = Math.random() * maxX;  
+    randY = Math.random() * (maxY - minY) + minY;  
+    dist = Math.hypot(randX-lastX, randY-lastY);  
+  }while(dist < 80);  
 
-let gameInterval, loopId, purpleInterval;
+  lastX = randX;  
+  lastY = randY;  
+  noBtn.style.left = randX + "px";  
+  noBtn.style.top = randY + "px";  
 
-/* START MENU MUSIC */
-document.body.addEventListener("click", ()=>{
-  if(menuMusic.paused) menuMusic.play().catch(()=>{});
-},{once:true});
+  if(noCount === 14){  
+    menuMusic.pause();  
+    introVideo.style.display = 'block';  
+    introVideo.play();  
+    introVideo.onended = () => {  
+      introVideo.style.display = 'none';  
+      start.classList.add('hidden');  
+      game.classList.remove('hidden');  
+      startGame();  
+    };  
+  }  
+};  
 
-yesBtn.onclick = () => {
-  start.classList.add('hidden');
-  end.classList.remove('hidden');
-  end.innerHTML = "<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
-};
+function startGame(){  
+  playing = true;  
+  gameMusic.currentTime = 0;  
+  gameMusic.play();  
+  gameInterval = setInterval(spawnObstacle,1500);  
+  loopId = requestAnimationFrame(loop);  
+}  
 
-noBtn.onclick = () => {
-  noCount++;
+function spawnObstacle(){  
+  if(!playing) return;  
+  const o = document.createElement('div');  
+  o.className = 'obstacle';  
+  o.style.left = '100%';  
+  game.appendChild(o);  
+  obstacles.push(o);  
+}  
 
-  noBtn.style.transform = `scale(${Math.max(.2,1-noCount*.06)})`;
-  yesBtn.style.transform = `scale(${1+noCount*.08})`;
+function isColliding(a,b){  
+  const r1=a.getBoundingClientRect();  
+  const r2=b.getBoundingClientRect();  
+  return !(r1.right<r2.left||r1.left>r2.right||r1.bottom<r2.top||r1.top>r2.bottom);  
+}  
 
-  const box = document.querySelector('.buttons');
-  const padding = 10;
+function loop(){  
+  if(!playing) return;  
+  vy += -0.4;  
+  y += vy;  
+  if(y <= 0){y = 0;vy = 0;}  
+  jerry.style.bottom = (80 + y) + 'px';  
 
-  const maxX = box.clientWidth - noBtn.offsetWidth - padding;
-  const minY = yesBtn.offsetHeight + 20;
-  const maxY = box.clientHeight - noBtn.offsetHeight - padding;
+  obstacles.forEach((o,i)=>{  
+    let x = o.offsetLeft;  
+    o.style.left = (x - 5) + 'px';  
+    if(isColliding(jerry,o)) showFinalOptions();  
+    if(x < -60){o.remove();obstacles.splice(i,1);passed++;if(passed === 14) finish();}  
+  });  
 
-  let randX, randY, dist;
+  loopId = requestAnimationFrame(loop);  
+}  
 
-  do{
-    randX = Math.random() * maxX;
-    randY = Math.random() * (maxY - minY) + minY;
-    dist = Math.hypot(randX-lastX, randY-lastY);
-  }while(dist < 80); // avoid near previous position
+game.onclick = () => {if(playing && y === 0){vy = 10;}};  
 
-  lastX = randX;
-  lastY = randY;
+function finish(){playing=false;clearInterval(gameInterval);cancelAnimationFrame(loopId);const f=document.createElement('div');f.id='finish';game.appendChild(f);const t=document.createElement('div');t.id='finishText';t.innerText="No I don't";game.appendChild(t);slideGojoIn();}  
 
-  noBtn.style.left = randX + "px";
-  noBtn.style.top = randY + "px";
+function slideGojoIn(){gameMusic.pause();gojoSound.currentTime=0;gojoSound.play();gojo.style.right='50px';setTimeout(throwHollowPurple,5000);}  
 
-  if(noCount === 14){
-    menuMusic.pause();
-    introVideo.style.display = 'block';
-    introVideo.play();
-    introVideo.onended = () => {
-      introVideo.style.display = 'none';
-      start.classList.add('hidden');
-      game.classList.remove('hidden');
-      startGame();
-    };
-  }
-};
+function throwHollowPurple(){purple.style.display='block';let x=window.innerWidth-150;purple.style.left=x+'px';purple.style.bottom='140px';purpleInterval=setInterval(()=>{x-=15;purple.style.left=x+'px';if(x<80){clearInterval(purpleInterval);purple.style.display='none';showFinalOptions();}},16);}  
 
-/* EVERYTHING BELOW UNCHANGED */
-function startGame(){
-  playing = true;
-  gameMusic.currentTime = 0;
-  gameMusic.play();
-  gameInterval = setInterval(spawnObstacle,1500);
-  loopId = requestAnimationFrame(loop);
-}
+function showFinalOptions(){playing=false;clearInterval(gameInterval);clearInterval(purpleInterval);cancelAnimationFrame(loopId);gameMusic.pause();menuMusic.currentTime=0;menuMusic.play();game.classList.add('hidden');gojo.style.right='-300px';purple.style.display='none';end.classList.remove('hidden');end.innerHTML=`<h2>Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️</h2><div class="buttons"><button onclick="finalYes()" style="background:#ff5fa2;color:#fff;">YES</button><button onclick="restartGame()" style="background:#444;color:#fff;">RESTART</button></div>`;}  
 
-function spawnObstacle(){
-  if(!playing) return;
-  const o = document.createElement('div');
-  o.className = 'obstacle';
-  o.style.left = '100%';
-  game.appendChild(o);
-  obstacles.push(o);
-}
+window.finalYes=()=>{end.innerHTML="<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";};  
 
-function isColliding(a,b){
-  const r1=a.getBoundingClientRect();
-  const r2=b.getBoundingClientRect();
-  return !(r1.right<r2.left||r1.left>r2.right||r1.bottom<r2.top||r1.top>r2.bottom);
-}
-
-function loop(){
-  if(!playing) return;
-
-  vy += -0.4;
-  y += vy;
-
-  if(y <= 0){
-    y = 0;
-    vy = 0;
-  }
-
-  jerry.style.bottom = (80 + y) + 'px';
-
-  obstacles.forEach((o,i)=>{
-    let x = o.offsetLeft;
-    o.style.left = (x - 5) + 'px';
-
-    if(isColliding(jerry,o)){
-      showFinalOptions();
-    }
-
-    if(x < -60){
-      o.remove();
-      obstacles.splice(i,1);
-      passed++;
-      if(passed === 14) finish();
-    }
-  });
-
-  loopId = requestAnimationFrame(loop);
-}
-
-game.onclick = () => {
-  if(playing && y === 0){
-    vy = 10;
-  }
-};
-
-function finish(){
-  playing = false;
-  clearInterval(gameInterval);
-  cancelAnimationFrame(loopId);
-
-  const f = document.createElement('div');
-  f.id = 'finish';
-  game.appendChild(f);
-
-  const t = document.createElement('div');
-  t.id = 'finishText';
-  t.innerText = "No I don't";
-  game.appendChild(t);
-
-  slideGojoIn();
-}
-
-function slideGojoIn(){
-  gameMusic.pause();
-  gojoSound.currentTime = 0;
-  gojoSound.play();
-  gojo.style.right = '50px';
-  setTimeout(throwHollowPurple,5000);
-}
-
-function throwHollowPurple(){
-  purple.style.display = 'block';
-  let x = window.innerWidth - 150;
-  purple.style.left = x + 'px';
-  purple.style.bottom = '140px';
-
-  purpleInterval = setInterval(()=>{
-    x -= 15;
-    purple.style.left = x + 'px';
-
-    if(x < 80){
-      clearInterval(purpleInterval);
-      purple.style.display = 'none';
-      showFinalOptions();
-    }
-  },16);
-}
-
-function showFinalOptions(){
-  playing = false;
-  clearInterval(gameInterval);
-  clearInterval(purpleInterval);
-  cancelAnimationFrame(loopId);
-
-  gameMusic.pause();
-  menuMusic.currentTime = 0;
-  menuMusic.play();
-
-  game.classList.add('hidden');
-  gojo.style.right = '-300px';
-  purple.style.display = 'none';
-
-  end.classList.remove('hidden');
-  end.innerHTML = `
-    <h2>Do you now accept your bf is always right in every argument and wanna be his Valentine 😼❤️</h2>
-    <div class="buttons">
-      <button onclick="finalYes()" style="background:#ff5fa2;color:#fff;">YES</button>
-      <button onclick="restartGame()" style="background:#444;color:#fff;">RESTART</button>
-    </div>
-  `;
-}
-
-window.finalYes = () => {
-  end.innerHTML = "<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
-};
-
-window.restartGame = () => {
-  end.classList.add('hidden');
-  game.classList.remove('hidden');
-
-  menuMusic.pause();
-
-  obstacles.forEach(o=>o.remove());
-  obstacles=[];
-  passed=0;
-  y=0;
-  vy=0;
-
-  document.getElementById('finish')?.remove();
-  document.getElementById('finishText')?.remove();
-
-  gojo.style.right='-300px';
-  startGame();
-};
-</script>
-</body>
+window.restartGame=()=>{end.classList.add('hidden');game.classList.remove('hidden');menuMusic.pause();obstacles.forEach(o=>o.remove());obstacles=[];passed=0;y=0;vy=0;document.getElementById('finish')?.remove();document.getElementById('finishText')?.remove();gojo.style.right='-300px';startGame();};  
+</script>  
+</body>  
 </html>
