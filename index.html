@@ -55,9 +55,7 @@ button{padding:16px 36px;font-size:1.2rem;border:none;border-radius:14px;cursor:
   <div id="ground"></div>
 </div><img id="gojo" src="gojo.png">
 <div id="purple"></div>
-<video id="introVideo" src="intro.mp4"></video><audio id="gameMusic" src="game-music.mp3" loop preload="auto"></audio>
-<audio id="gojoSound" src="gojo-entry.mp3" preload="auto"></audio>
-<audio id="startMusic" src="start-music.mp3" loop preload="auto"></audio>
+<video id="introVideo" src="intro.mp4"></video><audio id="gameMusic" src="game-music.mp3" loop preload="auto"></audio> <audio id="gojoSound" src="gojo-entry.mp3" preload="auto"></audio> <audio id="startMusic" src="start-music.mp3" loop preload="auto"></audio>
 
 <div id="end" class="screen hidden"></div><script>
 const start = document.getElementById('start');
@@ -73,16 +71,18 @@ const gojoSound = document.getElementById('gojoSound');
 const gameMusic = document.getElementById('gameMusic');
 const startMusic = document.getElementById('startMusic');
 
-/* 🔊 PERFECT MOBILE AUDIO UNLOCK */
+/* GLOBAL AUDIO UNLOCK — TAP ANYWHERE */
+let audioUnlocked=false;
 function unlockAudio(){
-  startMusic.currentTime = 0;
-  startMusic.play().then(()=>{
-    startMusic.pause();
-    startMusic.currentTime = 0;
-  }).catch(()=>{});
+  if(audioUnlocked) return;
+  audioUnlocked=true;
+  startMusic.volume=1;
+  startMusic.currentTime=0;
+  startMusic.play().catch(()=>{});
 }
-document.addEventListener("touchstart", unlockAudio, {once:true});
-document.addEventListener("click", unlockAudio, {once:true});
+document.addEventListener('pointerdown',unlockAudio,{once:true});
+document.addEventListener('touchstart',unlockAudio,{once:true});
+document.addEventListener('click',unlockAudio,{once:true});
 
 let noCount = 0;
 let y = 0;
@@ -90,19 +90,19 @@ let vy = 0;
 let obstacles = [];
 let passed = 0;
 let playing = false;
-let lastX = 0, lastY = 72;
+let lastX=0,lastY=72;
 
 let gameInterval, loopId, purpleInterval;
 
 yesBtn.onclick = () => {
-  startMusic.play().catch(()=>{});
+  unlockAudio();
   start.classList.add('hidden');
   end.classList.remove('hidden');
   end.innerHTML = "<h2>You are successfully appointed as Valentine of Mr Ishit 😚❤️</h2>";
 };
 
 noBtn.onclick = () => {
-  startMusic.play().catch(()=>{});
+  unlockAudio();
   noCount++;
 
   noBtn.style.transform = `scale(${Math.max(.2,1-noCount*.06)})`;
@@ -115,15 +115,15 @@ noBtn.onclick = () => {
   const minY = yesBtn.offsetHeight + 20;
   const maxY = box.clientHeight - noBtn.offsetHeight - padding;
 
-  let randX, randY, dist;
+  let randX,randY,dist;
   do{
-    randX = Math.random() * maxX;
-    randY = Math.random() * (maxY - minY) + minY;
-    dist = Math.hypot(randX-lastX, randY-lastY);
-  }while(dist < 80);
+    randX=Math.random()*maxX;
+    randY=Math.random()*(maxY-minY)+minY;
+    dist=Math.hypot(randX-lastX,randY-lastY);
+  }while(dist<70);
 
-  lastX = randX;
-  lastY = randY;
+  lastX=randX;
+  lastY=randY;
 
   noBtn.style.left = randX + "px";
   noBtn.style.top = randY + "px";
@@ -170,7 +170,10 @@ function loop(){
   vy += -0.4;
   y += vy;
 
-  if(y <= 0){ y = 0; vy = 0; }
+  if(y <= 0){
+    y = 0;
+    vy = 0;
+  }
 
   jerry.style.bottom = (80 + y) + 'px';
 
@@ -178,7 +181,9 @@ function loop(){
     let x = o.offsetLeft;
     o.style.left = (x - 5) + 'px';
 
-    if(isColliding(jerry,o)) showFinalOptions();
+    if(isColliding(jerry,o)){
+      showFinalOptions();
+    }
 
     if(x < -60){
       o.remove();
@@ -191,7 +196,11 @@ function loop(){
   loopId = requestAnimationFrame(loop);
 }
 
-game.onclick = () => { if(playing && y === 0) vy = 10; };
+game.onclick = () => {
+  if(playing && y === 0){
+    vy = 10;
+  }
+};
 
 function finish(){
   playing = false;
@@ -267,7 +276,6 @@ window.finalYes = () => {
 window.restartGame = () => {
   end.classList.add('hidden');
   game.classList.remove('hidden');
-
   startMusic.pause();
 
   obstacles.forEach(o=>o.remove());
