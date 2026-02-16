@@ -218,7 +218,7 @@ function isColliding(a,b){
 
 function loop(){  
   if(!playing) return;  
-  vy += -0.4;  
+  vy += -0.5;  
   y += vy;  
   if(y <= 0){y = 0;vy = 0;}  
   jerry.style.bottom = (80 + y) + 'px';  
