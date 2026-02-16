@@ -233,7 +233,7 @@ function loop(){
   loopId = requestAnimationFrame(loop);  
 }  
 
-game.onclick = () => {if(playing && y === 0){vy = 10.5;}};  
+game.onclick = () => {if(playing && y === 0){vy = 11;}};  
 
 function finish(){playing=false;clearInterval(gameInterval);cancelAnimationFrame(loopId);const f=document.createElement('div');f.id='finish';game.appendChild(f);const t=document.createElement('div');t.id='finishText';t.innerText="No I don't";game.appendChild(t);slideGojoIn();}  
 
